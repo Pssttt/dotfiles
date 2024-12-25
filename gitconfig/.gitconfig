@@ -1,10 +1,10 @@
 [init]
-	defaultBranch = main
+  defaultBranch = main
 [user]
-	name = Pssttt
-	email = pssthant@gmail.com
+  name = Pssttt
+  email = pssthant@gmail.com
 [core]
-	editor = nvim
+  editor = nvim
 [alias]
   c = commit -m
   s = status
