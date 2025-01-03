@@ -12,6 +12,7 @@ return {
             },
         },
     },
+
     {
         "echasnovski/mini.hipatterns",
         event = "BufReadPre",
@@ -33,6 +34,7 @@ return {
             },
         },
     },
+
     {
         "dinhhuy258/git.nvim",
         event = "BufReadPre",
@@ -45,6 +47,7 @@ return {
             },
         },
     },
+
     {
         "telescope.nvim",
         dependencies = {
@@ -58,8 +61,7 @@ return {
             {
                 "<leader>fP",
                 function()
-                    local builtin = require("telescope.builtin")
-                    builtin.find_files({
+                    require("telescope.builtin").find_files({
                         cwd = require("lazy.core.config").options.root,
                     })
                 end,
@@ -74,7 +76,7 @@ return {
                         hidden = true,
                     })
                 end,
-                desc = "List files in your current working directory, respects .gitignore",
+                desc = "Lists files in your current working directory, respects .gitignore",
             },
             {
                 ";r",
@@ -92,7 +94,7 @@ return {
                     local builtin = require("telescope.builtin")
                     builtin.buffers()
                 end,
-                desc = "List open buffers",
+                desc = "Lists open buffers",
             },
             {
                 ";t",
@@ -100,7 +102,7 @@ return {
                     local builtin = require("telescope.builtin")
                     builtin.help_tags()
                 end,
-                desc = "List available help tags and open a new window with the relevant help info on <cr>",
+                desc = "Lists available help tags and opens a new window with the relevant help info on <cr>",
             },
             {
                 ";;",
@@ -114,9 +116,9 @@ return {
                 ";e",
                 function()
                     local builtin = require("telescope.builtin")
-                    builtin.diagnostic()
+                    builtin.diagnostics()
                 end,
-                desc = "List Diagnostics for all open buffers or a specific buffer",
+                desc = "Lists Diagnostics for all open buffers or a specific buffer",
             },
             {
                 ";s",
@@ -124,7 +126,7 @@ return {
                     local builtin = require("telescope.builtin")
                     builtin.treesitter()
                 end,
-                desc = "List function names, variables from Treesitter",
+                desc = "Lists Function names, variables, from Treesitter",
             },
             {
                 "sf",
@@ -134,13 +136,14 @@ return {
                     local function telescope_buffer_dir()
                         return vim.fn.expand("%:p:h")
                     end
+
                     telescope.extensions.file_browser.file_browser({
                         path = "%:p:h",
                         cwd = telescope_buffer_dir(),
                         respect_gitignore = false,
                         hidden = true,
                         grouped = true,
-                        prewiewer = false,
+                        previewer = false,
                         initial_mode = "normal",
                         layout_config = { height = 40 },
                     })
@@ -150,6 +153,8 @@ return {
         },
         config = function(_, opts)
             local telescope = require("telescope")
+            opts = opts or {}
+            opts.defaults = opts.defaults or {}
             local actions = require("telescope.actions")
             local fb_actions = require("telescope").extensions.file_browser.actions
 
@@ -175,7 +180,7 @@ return {
             opts.extensions = {
                 file_browser = {
                     theme = "dropdown",
-                    -- disables netrw and use telescope file browser in its place
+                    -- disables netrw and use telescope-file-browser in its place
                     hijack_netrw = true,
                     mappings = {
                         ["n"] = {
@@ -194,8 +199,8 @@ return {
                                     actions.move_selection_next(prompt_bufnr)
                                 end
                             end,
-                            ["<PageUp"] = actions.preview_scrolling_up,
-                            ["<PageDown"] = actions.preview_scrolling_down,
+                            ["<PageUp>"] = actions.preview_scrolling_up,
+                            ["<PageDown>"] = actions.preview_scrolling_down,
                         },
                     },
                 },
@@ -205,17 +210,18 @@ return {
             require("telescope").load_extension("file_browser")
         end,
     },
+
     {
         "saghen/blink.cmp",
         opts = {
             completion = {
                 menu = {
-                    winblend = vim.o.winblend,
+                    winblend = vim.o.pumblend,
                 },
             },
             signature = {
                 window = {
-                    winblend = vim.o.winblend,
+                    winblend = vim.o.pumblend,
                 },
             },
         },
