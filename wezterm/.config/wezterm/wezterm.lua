@@ -59,7 +59,7 @@ config.window_background_opacity = 0.94
 config.window_close_confirmation = "NeverPrompt"
 config.window_decorations = "RESIZE"
 config.window_padding = {
-	top = "1.5cell",
+	top = "0.5cell",
 }
 
 return config
