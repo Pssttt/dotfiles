@@ -50,4 +50,40 @@ return {
             opts.presets.lsp_doc_border = true
         end,
     },
+    {
+        "rcarriga/nvim-notify",
+        opts = {
+            timeout = 3000,
+        },
+    },
+
+    {
+        "snacks.nvim",
+        opts = {
+            scroll = {
+                enabled = false,
+            },
+        },
+        keys = {},
+    },
+
+    -- bufferline
+    {
+        "akinsho/nvim-bufferline.lua",
+        dependencies = "nvim-tree/nvim-web-devicons",
+        event = "VeryLazy",
+        keys = {
+            { "<Tab>", "<Cmd>BufferLineCycleNext<CR>", desc = "Next Tab" },
+            { "<S-Tab>", "<Cmd>BufferLineCyclePrev<CR>", desc = "Prev Tab" },
+        },
+        opts = {
+            options = {
+                mode = "tabs",
+                show_close_icon = false,
+                show_buffer_close_icons = false,
+            },
+        },
+    },
+
+    {},
 }
