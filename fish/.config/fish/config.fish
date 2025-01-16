@@ -16,6 +16,8 @@ alias la "eza -A"
 alias ll "eza -l --icons"
 alias lla "eza -l -A --icons"
 
+set -gx EDITOR nvim
+
 set -gx EZA_CONFIG_DIR /Users/psst/.config/eza
 set -gx XDG_CONFIG_HOME /Users/psst/.config
 
