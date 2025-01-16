@@ -88,4 +88,89 @@ config.window_padding = {
 	top = "0.5cell",
 }
 
+local process_icons = {
+	["docker"] = wezterm.nerdfonts.linux_docker,
+	["docker-compose"] = wezterm.nerdfonts.linux_docker,
+	["btm"] = "",
+	["psql"] = "󱤢",
+	["usql"] = "󱤢",
+	["kuberlr"] = wezterm.nerdfonts.linux_docker,
+	["ssh"] = wezterm.nerdfonts.fa_exchange,
+	["ssh-add"] = wezterm.nerdfonts.fa_exchange,
+	["kubectl"] = wezterm.nerdfonts.linux_docker,
+	["stern"] = wezterm.nerdfonts.linux_docker,
+	["nvim"] = wezterm.nerdfonts.custom_vim,
+	["vim"] = wezterm.nerdfonts.dev_vim,
+	["make"] = wezterm.nerdfonts.seti_makefile,
+	["node"] = wezterm.nerdfonts.mdi_hexagon,
+	["go"] = wezterm.nerdfonts.seti_go,
+	["python3"] = wezterm.nerdfonts.dev_python,
+	["Python"] = wezterm.nerdfonts.dev_python,
+	["zsh"] = wezterm.nerdfonts.dev_terminal,
+	["bash"] = wezterm.nerdfonts.cod_terminal_bash,
+	["htop"] = wezterm.nerdfonts.mdi_chart_donut_variant,
+	["cargo"] = wezterm.nerdfonts.dev_rust,
+	["sudo"] = wezterm.nerdfonts.fa_hashtag,
+	["lazydocker"] = wezterm.nerdfonts.linux_docker,
+	["git"] = wezterm.nerdfonts.dev_git,
+	["lua"] = wezterm.nerdfonts.seti_lua,
+	["wget"] = wezterm.nerdfonts.mdi_arrow_down_box,
+	["curl"] = wezterm.nerdfonts.mdi_flattr,
+	["gh"] = wezterm.nerdfonts.dev_github_badge,
+	["ruby"] = wezterm.nerdfonts.cod_ruby,
+	["fish"] = wezterm.nerdfonts.md_fish,
+	["spotify_player"] = wezterm.nerdfonts.fa_spotify,
+	["lazygit"] = wezterm.nerdfonts.dev_git,
+}
+
+local function get_current_working_dir(tab)
+	local current_dir = tab.active_pane and tab.active_pane.current_working_dir or { file_path = "" }
+	local HOME_DIR = os.getenv("HOME")
+
+	return current_dir.file_path == HOME_DIR and "~" or string.gsub(current_dir.file_path, "(.*[/\\])(.*)", "%2")
+end
+
+local function get_process(tab)
+	if not tab.active_pane or tab.active_pane.foreground_process_name == "" then
+		return nil
+	end
+
+	local process_name = string.gsub(tab.active_pane.foreground_process_name, "(.*[/\\])(.*)", "%2")
+	return process_icons[process_name] or string.format("[%s]", process_name)
+end
+
+wezterm.on("format-tab-title", function(tab, tabs, panes, hover, max_width)
+	local has_unseen_output = false
+	if not tab.is_active then
+		for _, pane in ipairs(tab.panes) do
+			if pane.has_unseen_output then
+				has_unseen_output = true
+				break
+			end
+		end
+	end
+
+	local tab_index = tab.tab_index + 1
+	local number_prefix = string.format("%d: ", tab_index)
+
+	local cwd = wezterm.format({
+		{ Text = get_current_working_dir(tab) },
+	})
+
+	local process = get_process(tab)
+	local title = process and string.format(" %s%s (%s) ", number_prefix, process, cwd)
+		or string.format("%s[?] ", number_prefix)
+
+	if has_unseen_output then
+		return {
+			{ Foreground = { Color = "#28719c" } },
+			{ Text = title },
+		}
+	end
+
+	return {
+		{ Text = title },
+	}
+end)
+
 return config
