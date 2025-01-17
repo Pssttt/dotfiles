@@ -1,4 +1,5 @@
 return {
+	-- messages, cmdline and the popupmenu
 	{
 		"folke/noice.nvim",
 		opts = function(_, opts)
@@ -50,6 +51,7 @@ return {
 			opts.presets.lsp_doc_border = true
 		end,
 	},
+
 	{
 		"rcarriga/nvim-notify",
 		opts = {
@@ -60,27 +62,25 @@ return {
 	{
 		"snacks.nvim",
 		opts = {
-			scroll = {
-				enabled = false,
-			},
+			scroll = { enabled = false },
 		},
 		keys = {},
 	},
 
-	-- bufferline
+	-- buffer line
 	{
-		"akinsho/nvim-bufferline.lua",
+		"akinsho/bufferline.nvim",
 		dependencies = "nvim-tree/nvim-web-devicons",
 		event = "VeryLazy",
 		keys = {
-			{ "<Tab>", "<Cmd>BufferLineCycleNext<CR>", desc = "Next Tab" },
-			{ "<S-Tab>", "<Cmd>BufferLineCyclePrev<CR>", desc = "Prev Tab" },
+			{ "<Tab>", "<Cmd>BufferLineCycleNext<CR>", desc = "Next tab" },
+			{ "<S-Tab>", "<Cmd>BufferLineCyclePrev<CR>", desc = "Prev tab" },
 		},
 		opts = {
 			options = {
 				mode = "tabs",
-				show_close_icon = false,
 				show_buffer_close_icons = false,
+				show_close_icon = false,
 			},
 		},
 	},
@@ -115,5 +115,26 @@ return {
 				end,
 			})
 		end,
+	},
+
+	{
+		"folke/snacks.nvim",
+		opts = {
+			dashboard = {
+				preset = {
+					header = [[
+                        
+
+██████╗ ███████╗███████╗████████╗
+██╔══██╗██╔════╝██╔════╝╚══██╔══╝
+██████╔╝███████╗███████╗   ██║   
+██╔═══╝ ╚════██║╚════██║   ██║   
+██║     ███████║███████║   ██║   
+╚═╝     ╚══════╝╚══════╝   ╚═╝   
+                                
+                    ]],
+				},
+			},
+		},
 	},
 }
