@@ -22,3 +22,5 @@ set -gx EZA_CONFIG_DIR /Users/psst/.config/eza
 set -gx XDG_CONFIG_HOME /Users/psst/.config
 
 fish_add_path /Users/psst/.spicetify
+
+fzf --fish | source
