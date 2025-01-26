@@ -121,6 +121,7 @@ local process_icons = {
 	["fish"] = wezterm.nerdfonts.md_fish,
 	["spotify_player"] = wezterm.nerdfonts.fa_spotify,
 	["lazygit"] = wezterm.nerdfonts.dev_git,
+	["node"] = wezterm.nerdfonts.md_nodejs,
 }
 
 local function get_current_working_dir(tab)
