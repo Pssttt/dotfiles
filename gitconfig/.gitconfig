@@ -6,5 +6,11 @@
 [core]
   editor = nvim
 [alias]
-  c = commit -m
-  s = status
+  ci = commit -m
+  co = checkout
+  cb = checkout -b
+  st = status
+  br = branch
+  di = diff
+  unstage = reset HEAD --
+  last = log -1 HEAD
