@@ -13,6 +13,16 @@ return {
 		opts = { snippet_engine = "luasnip" },
 	},
 	{
+		"akinsho/toggleterm.nvim",
+		config = function()
+			require("toggleterm").setup({
+				size = 20,
+				open_mapping = [[<c-\>]],
+				direction = "float",
+			})
+		end,
+	},
+	{
 		"ThePrimeagen/refactoring.nvim",
 		keys = {
 			{
@@ -20,7 +30,7 @@ return {
 				function()
 					require("refactoring").select_refactor()
 				end,
-				mode = "v",
+				mode = "n",
 				noremap = true,
 				silent = true,
 				expr = true,
