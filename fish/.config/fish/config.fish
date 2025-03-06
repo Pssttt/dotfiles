@@ -24,6 +24,6 @@ set -gx XDG_CONFIG_HOME /Users/psst/.config
 fish_add_path /Users/psst/.spicetify
 
 fzf --fish | source
-zoxide init fish | source
+zoxide init --cmd cd fish | source
 
 trap clear WINCH
