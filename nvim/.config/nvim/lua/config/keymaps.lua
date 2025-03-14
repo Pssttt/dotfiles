@@ -44,9 +44,12 @@ keymap.set("n", "<C-w><up>", "<C-w>+")
 keymap.set("n", "<C-w><down>", "<C-w>-")
 
 -- Remove trailing comments
-vim.keymap.set("v", "<leader>dc", ":<C-u>lua require('psst.comments').removeTreesitterComments()<CR>", opts)
+keymap.set("v", "<leader>dc", ":<C-u>lua require('psst.comments').removeTreesitterComments()<CR>", opts)
 
 -- Diagnostics
 keymap.set("n", "<C-j>", function()
 	vim.diagnostic.goto_next()
 end, opts)
+
+-- Auto Save
+keymap.set("n", "<leader>cn", ":ASToggle<CR>", opts)

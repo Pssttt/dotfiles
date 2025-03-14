@@ -39,6 +39,14 @@ return {
 		opts = {},
 	},
 	{
+		"Pocco81/auto-save.nvim",
+		config = function()
+			require("auto-save").setup({
+				trigger_events = { "FocusLost" },
+			})
+		end,
+	},
+	{
 		"monaqa/dial.nvim",
 		keys = {
 			{
