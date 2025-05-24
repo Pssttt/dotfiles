@@ -191,6 +191,10 @@ if.app-id = 'com.postmanlabs.mac'
 run = 'move-node-to-workspace 3'
 
 [[on-window-detected]]
+if.app-id = 'com.jetbrains.datagrip'
+run = 'move-node-to-workspace 3'
+
+[[on-window-detected]]
 if.app-id = 'com.spotify.client'
 run = 'move-node-to-workspace M'
 
@@ -216,6 +220,10 @@ run = 'move-node-to-workspace C'
 
 [[on-window-detected]]
 if.app-id = 'com.jetbrains.pycharm'
+run = 'move-node-to-workspace C'
+
+[[on-window-detected]]
+if.app-id = 'com.trae.app'
 run = 'move-node-to-workspace C'
 
 [[on-window-detected]]
