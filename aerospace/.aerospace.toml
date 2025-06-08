@@ -203,6 +203,10 @@ if.app-id = 'org.mozilla.firefox'
 run = 'move-node-to-workspace B'
 
 [[on-window-detected]]
+if.app-id = 'app.zen-browser.zen'
+run = 'move-node-to-workspace B'
+
+[[on-window-detected]]
 if.app-id = 'com.hnc.Discord'
 run = 'move-node-to-workspace D'
 
@@ -240,4 +244,8 @@ run = 'layout floating'
 
 [[on-window-detected]]
 if.app-name-regex-substring = 'finder'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'net.freemacsoft.AppCleaner'
 run = 'layout floating'
