@@ -38,10 +38,10 @@ keymap.set("n", "sj", "<C-w>j")
 keymap.set("n", "sl", "<C-w>l")
 
 -- Resize window
-keymap.set("n", "<C-w><left>", "<C-w><")
-keymap.set("n", "<C-w><right>", "<C-w>>")
-keymap.set("n", "<C-w><up>", "<C-w>+")
-keymap.set("n", "<C-w><down>", "<C-w>-")
+keymap.set("n", "<M-Left>", "<C-w><")
+keymap.set("n", "<M-Right>", "<C-w>>")
+keymap.set("n", "<M-Up>", "<C-w>-")
+keymap.set("n", "<M-Down>", "<C-w>+")
 
 -- Remove trailing comments
 keymap.set("v", "<leader>dc", ":<C-u>lua require('psst.comments').removeTreesitterComments()<CR>", opts)
