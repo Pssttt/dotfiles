@@ -16,3 +16,7 @@
   last = log -1 HEAD
 [push]
 	autoSetupRemote = true
+[rerere]
+	enabled = true
+[column]
+	ui = auto
