@@ -77,6 +77,7 @@ config.hide_tab_bar_if_only_one_tab = true
 config.initial_cols = 180
 config.initial_rows = 45
 config.line_height = 1.2
+config.cell_width = 1.1
 config.macos_window_background_blur = 40
 config.send_composed_key_when_left_alt_is_pressed = true -- MacOS Fix
 config.use_fancy_tab_bar = false
