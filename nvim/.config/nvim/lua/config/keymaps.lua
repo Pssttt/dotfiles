@@ -53,3 +53,6 @@ end, opts)
 
 -- Auto Save
 keymap.set("n", "<leader>cn", ":ASToggle<CR>", opts)
+
+-- Generate env example
+vim.keymap.set("n", "<leader>ce", ":lua require('psst.genEnv').generateEnvExample()<CR>", opts)
