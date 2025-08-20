@@ -20,3 +20,5 @@
 	enabled = true
 [column]
 	ui = auto
+[pull]
+	rebase = true
