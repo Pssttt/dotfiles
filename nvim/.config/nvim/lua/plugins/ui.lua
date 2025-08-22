@@ -70,7 +70,10 @@ return {
 	-- buffer line
 	{
 		"akinsho/bufferline.nvim",
-		dependencies = "nvim-tree/nvim-web-devicons",
+		dependencies = {
+			"nvim-tree/nvim-web-devicons",
+			"catppuccin/nvim",
+		},
 		event = "VeryLazy",
 		keys = {
 			{ "<Tab>", "<Cmd>BufferLineCycleNext<CR>", desc = "Next tab" },
@@ -82,7 +85,11 @@ return {
 				show_buffer_close_icons = false,
 				show_close_icon = false,
 			},
+			highlights = require("catppuccin.groups.integrations.bufferline").get_theme(),
 		},
+		config = function(_, opts)
+			require("bufferline").setup(opts)
+		end,
 	},
 
 	-- filename
