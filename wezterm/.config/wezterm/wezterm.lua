@@ -120,7 +120,7 @@ local process_icons = {
 	["gh"] = wezterm.nerdfonts.dev_github_badge,
 	["ruby"] = wezterm.nerdfonts.cod_ruby,
 	["fish"] = wezterm.nerdfonts.md_fish,
-	["spotify_player"] = wezterm.nerdfonts.fa_spotify,
+	["ncspot"] = wezterm.nerdfonts.fa_spotify,
 	["lazygit"] = wezterm.nerdfonts.dev_git,
 	["node"] = wezterm.nerdfonts.md_nodejs,
 }
