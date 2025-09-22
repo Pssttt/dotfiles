@@ -29,8 +29,8 @@ return {
 					end,
 				},
 				tsserver = {
-					root_dir = function(...)
-						return require("lspconfig.util").root_pattern(".git")(...)
+					root_dir = function(fname)
+						return require("lspconfig.util").root_pattern("tsconfig.json", "package.json", ".git")(fname)
 					end,
 					single_file_support = false,
 					settings = {
