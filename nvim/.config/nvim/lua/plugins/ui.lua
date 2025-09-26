@@ -85,7 +85,7 @@ return {
 				show_buffer_close_icons = false,
 				show_close_icon = false,
 			},
-			highlights = require("catppuccin.groups.integrations.bufferline").get_theme(),
+			highlights = require("catppuccin.special.bufferline").get_theme(),
 		},
 		config = function(_, opts)
 			require("bufferline").setup(opts)
