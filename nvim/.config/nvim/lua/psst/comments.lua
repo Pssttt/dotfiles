@@ -1,7 +1,6 @@
 local M = {}
 
 function M.removeTreesitterComments()
-	local ts_utils = require("nvim-treesitter.ts_utils")
 	local parser = vim.treesitter.get_parser(0)
 	if not parser then
 		print("No Treesitter parser available for the current buffer!")
