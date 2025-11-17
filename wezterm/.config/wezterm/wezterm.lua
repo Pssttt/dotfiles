@@ -5,7 +5,7 @@ local custom = wezterm.color.get_builtin_schemes()["Catppuccin Mocha"]
 custom.background = "#191724"
 custom.cursor_bg = "#bac2de"
 
-config.leader = { key = "Space", mods = "SHIFT", timeout_milliseconds = 1000 }
+config.leader = { key = "Space", mods = "CTRL", timeout_milliseconds = 1000 }
 config.keys = {
 	-- splitting
 	{ mods = "LEADER", key = "s", action = wezterm.action.SplitVertical({ domain = "CurrentPaneDomain" }) },
@@ -22,6 +22,8 @@ config.keys = {
 	{ mods = "SUPER | SHIFT", key = "n", action = wezterm.action.ActivateTabRelative(1) },
 	{ mods = "SUPER | SHIFT", key = "x", action = wezterm.action.CloseCurrentPane({ confirm = false }) },
 	{ mods = "SUPER | SHIFT", key = "c", action = wezterm.action.SpawnTab("CurrentPaneDomain") },
+	{ key = "Enter", mods = "SHIFT", action = wezterm.action({ SendString = "\x1b\r" }) },
+
 	{
 		mods = "LEADER",
 		key = "r",
@@ -123,6 +125,7 @@ local process_icons = {
 	["ncspot"] = wezterm.nerdfonts.fa_spotify,
 	["lazygit"] = wezterm.nerdfonts.dev_git,
 	["node"] = wezterm.nerdfonts.md_nodejs,
+	["act"] = wezterm.nerdfonts.cod_github_action,
 }
 
 local function get_current_working_dir(tab)
