@@ -137,18 +137,42 @@ return {
 	},
 	{
 		"neovim/nvim-lspconfig",
-		opts = function()
-			local keys = require("lazyvim.plugins.lsp.keymaps").get()
-			vim.list_extend(keys, {
-				{
-					"gd",
-					function()
-						-- DO NOT RESUSE WINDOW
-						require("telescope.builtin").lsp_definitions({ reuse_win = false })
-					end,
-					desc = "Goto Definition",
-					has = "definition",
+		opts = {
+			servers = {
+				["*"] = {
+					keys = {
+						{ "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", has = "definition" },
+					},
 				},
+			},
+		},
+		-- opts = function()
+		-- 	local keys = require("lazyvim.plugins.lsp.keymaps").get()
+		-- 	vim.list_extend(keys, {
+		-- 		{
+		-- 			"gd",
+		-- 			function()
+		-- 				-- DO NOT RESUSE WINDOW
+		-- 				require("telescope.builtin").lsp_definitions({ reuse_win = false })
+		-- 			end,
+		-- 			desc = "Goto Definition",
+		-- 			has = "definition",
+		-- 		},
+		-- 	})
+		-- end,
+	},
+	{
+		"mfussenegger/nvim-lint",
+		opts = function(_, opts)
+			local lint = require("lint")
+
+			lint.linters_by_ft.env = {}
+
+			vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+				pattern = { ".env", "*.env" },
+				callback = function()
+					vim.bo.filetype = "env"
+				end,
 			})
 		end,
 	},
