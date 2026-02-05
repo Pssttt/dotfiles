@@ -9,7 +9,6 @@ set -gx TERM xterm-256color
 # aliases
 alias g git
 alias lg lazygit
-alias sp spotify_player
 alias v nvim
 alias ls eza
 alias la "eza -A"
@@ -21,9 +20,16 @@ set -gx EDITOR nvim
 set -gx EZA_CONFIG_DIR /Users/psst/.config/eza
 set -gx XDG_CONFIG_HOME /Users/psst/.config
 
-fish_add_path /Users/psst/.spicetify
+# fish_add_path /Users/psst/.spicetify
 
 fzf --fish | source
 zoxide init --cmd cd fish | source
 
 trap clear WINCH
+
+# pnpm
+set -gx PNPM_HOME "/Users/psst/Library/pnpm"
+if not string match -q -- $PNPM_HOME $PATH
+  set -gx PATH "$PNPM_HOME" $PATH
+end
+# pnpm end
