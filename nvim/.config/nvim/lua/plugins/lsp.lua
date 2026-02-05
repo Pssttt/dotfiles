@@ -22,38 +22,41 @@ return {
 			inlay_hints = { enabled = false },
 			---@type lspconfig.options
 			servers = {
+				eslint = {
+					settings = {
+						run = "onSave",
+					},
+				},
 				cssls = {},
 				tailwindcss = {
 					root_dir = function(...)
-						return require("lspconfig.util").root_pattern(".git")(...)
+						return require("lspconfig.util").root_pattern(
+							"tailwind.config.js",
+							"tailwind.config.ts",
+							"postcss.config.js"
+						)(fname)
 					end,
 				},
-				tsserver = {
-					root_dir = function(fname)
-						return require("lspconfig.util").root_pattern("tsconfig.json", "package.json", ".git")(fname)
-					end,
-					single_file_support = false,
+				vtsls = {
 					settings = {
 						typescript = {
 							inlayHints = {
-								includeInlayParameterNameHints = "literal",
-								includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-								includeInlayFunctionParameterTypeHints = true,
-								includeInlayVariableTypeHints = false,
-								includeInlayPropertyDeclarationTypeHints = true,
-								includeInlayFunctionLikeReturnTypeHints = true,
-								includeInlayEnumMemberValueHints = true,
+								parameterNames = { enabled = "literals" },
+								parameterTypes = { enabled = false },
+								variableTypes = { enabled = false },
+								propertyDeclarationTypes = { enabled = false },
+								functionLikeReturnTypes = { enabled = false },
+								enumMemberValues = { enabled = false },
 							},
 						},
 						javascript = {
 							inlayHints = {
-								includeInlayParameterNameHints = "all",
-								includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-								includeInlayFunctionParameterTypeHints = true,
-								includeInlayVariableTypeHints = true,
-								includeInlayPropertyDeclarationTypeHints = true,
-								includeInlayFunctionLikeReturnTypeHints = true,
-								includeInlayEnumMemberValueHints = true,
+								parameterNames = { enabled = "literals" },
+								parameterTypes = { enabled = false },
+								variableTypes = { enabled = false },
+								propertyDeclarationTypes = { enabled = false },
+								functionLikeReturnTypes = { enabled = false },
+								enumMemberValues = { enabled = false },
 							},
 						},
 					},
@@ -134,32 +137,6 @@ return {
 			},
 			setup = {},
 		},
-	},
-	{
-		"neovim/nvim-lspconfig",
-		opts = {
-			servers = {
-				["*"] = {
-					keys = {
-						{ "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", has = "definition" },
-					},
-				},
-			},
-		},
-		-- opts = function()
-		-- 	local keys = require("lazyvim.plugins.lsp.keymaps").get()
-		-- 	vim.list_extend(keys, {
-		-- 		{
-		-- 			"gd",
-		-- 			function()
-		-- 				-- DO NOT RESUSE WINDOW
-		-- 				require("telescope.builtin").lsp_definitions({ reuse_win = false })
-		-- 			end,
-		-- 			desc = "Goto Definition",
-		-- 			has = "definition",
-		-- 		},
-		-- 	})
-		-- end,
 	},
 	{
 		"mfussenegger/nvim-lint",
