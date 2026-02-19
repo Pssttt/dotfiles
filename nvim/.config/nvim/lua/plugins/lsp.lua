@@ -10,7 +10,7 @@ return {
 				"shellcheck",
 				"shfmt",
 				"tailwindcss-language-server",
-				"typescript-language-server",
+				"vtsls",
 			})
 		end,
 	},
@@ -23,13 +23,25 @@ return {
 			---@type lspconfig.options
 			servers = {
 				eslint = {
+					root_dir = function(fname)
+						local util = require("lspconfig.util")
+						return util.root_pattern(
+							"eslint.config.js",
+							"eslint.config.mjs",
+							"eslint.config.cjs",
+							".eslintrc.js",
+							".eslintrc.cjs",
+							".eslintrc.json",
+							".eslintrc"
+						)(fname) or util.root_pattern("package.json", ".git")(fname)
+					end,
 					settings = {
 						run = "onSave",
 					},
 				},
 				cssls = {},
 				tailwindcss = {
-					root_dir = function(...)
+					root_dir = function(fname)
 						return require("lspconfig.util").root_pattern(
 							"tailwind.config.js",
 							"tailwind.config.ts",
@@ -38,6 +50,11 @@ return {
 					end,
 				},
 				vtsls = {
+					root_dir = function(fname)
+						local util = require("lspconfig.util")
+						return util.root_pattern("tsconfig.json")(fname)
+							or util.root_pattern("package.json", ".git")(fname)
+					end,
 					settings = {
 						typescript = {
 							inlayHints = {
@@ -140,7 +157,7 @@ return {
 	},
 	{
 		"mfussenegger/nvim-lint",
-		opts = function(_, opts)
+		opts = function()
 			local lint = require("lint")
 
 			lint.linters_by_ft.env = {}
