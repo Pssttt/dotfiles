@@ -23,38 +23,13 @@ return {
 			---@type lspconfig.options
 			servers = {
 				eslint = {
-					root_dir = function(fname)
-						local util = require("lspconfig.util")
-						return util.root_pattern(
-							"eslint.config.js",
-							"eslint.config.mjs",
-							"eslint.config.cjs",
-							".eslintrc.js",
-							".eslintrc.cjs",
-							".eslintrc.json",
-							".eslintrc"
-						)(fname) or util.root_pattern("package.json", ".git")(fname)
-					end,
 					settings = {
 						run = "onSave",
 					},
 				},
 				cssls = {},
-				tailwindcss = {
-					root_dir = function(fname)
-						return require("lspconfig.util").root_pattern(
-							"tailwind.config.js",
-							"tailwind.config.ts",
-							"postcss.config.js"
-						)(fname)
-					end,
-				},
+				tailwindcss = {},
 				vtsls = {
-					root_dir = function(fname)
-						local util = require("lspconfig.util")
-						return util.root_pattern("tsconfig.json")(fname)
-							or util.root_pattern("package.json", ".git")(fname)
-					end,
 					settings = {
 						typescript = {
 							inlayHints = {
