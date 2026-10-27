@@ -23,3 +23,6 @@ vim.cmd([[let &t_Ce = "\e[4:0m"]])
 
 -- Add asteriks in block comments
 vim.opt.formatoptions:append({ "r" })
+
+-- Empty .tf files otherwise default to TinyFugue.
+vim.filetype.add({ extension = { tf = "terraform" } })
