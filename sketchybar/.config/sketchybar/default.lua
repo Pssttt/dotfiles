@@ -35,7 +35,7 @@ sbar.default({
     y_offset = 6,
     align = "center",
     background = {
-      border_width = 1,
+      border_width = 2,
       border_color = settings.colors.popup.border,
       corner_radius = 14,
       color = settings.colors.popup.bg,

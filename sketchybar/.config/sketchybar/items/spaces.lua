@@ -2,7 +2,6 @@ local constants = require("constants")
 local settings = require("config.settings")
 
 local palette <const> = settings.colors.palette
-local underline <const> = settings.dimens.graphics.underline
 
 local spaces = {}
 local occupied = {}
@@ -36,25 +35,28 @@ local function configFor(workspaceName)
 	return spaceConfigs[workspaceName] or { icon = workspaceName, name = workspaceName }
 end
 
--- active: bright icon + name + mauve underline
--- occupied: muted icon, empty: dim icon
+-- Hyprland-style indicators:
+-- active: stretched mauve pill, occupied: bright icon, empty: dim icon
 local function styleWorkspace(space, isSelected)
 	local iconColor = palette.surface2
 	if isSelected then
-		iconColor = palette.text
+		iconColor = palette.crust
 	elseif occupied[space.workspace] then
-		iconColor = palette.subtext
+		iconColor = palette.text
 	end
 
 	space.item:set({
-		icon = { color = iconColor },
-		label = { width = isSelected and "dynamic" or 0 },
+		icon = {
+			color = iconColor,
+			padding_left = isSelected and 18 or 8,
+			padding_right = isSelected and 18 or 8,
+		},
 		background = { color = isSelected and palette.mauve or settings.colors.transparent },
 	})
 end
 
 local function restyleAll()
-	sbar.animate("tanh", 12, function()
+	sbar.animate("sin", 18, function()
 		for sid, space in pairs(spaces) do
 			styleWorkspace(space, sid == focusedSpace)
 		end
@@ -95,24 +97,15 @@ local function addWorkspaceItem(workspaceName)
 		icon = {
 			string = spaceConfig.icon,
 			color = palette.surface2,
-			padding_left = 9,
-			padding_right = 9,
+			padding_left = 8,
+			padding_right = 8,
 		},
-		label = {
-			string = spaceConfig.name,
-			width = 0,
-			color = palette.text,
-			padding_left = 0,
-			padding_right = 10,
-			font = { style = settings.fonts.styles.bold },
-		},
-		-- the "background" is drawn as a thin underline on the bar's bottom edge
+		label = { drawing = false },
 		background = {
 			drawing = true,
 			color = settings.colors.transparent,
-			height = underline.height,
-			corner_radius = 1,
-			y_offset = underline.y_offset,
+			height = 22,
+			corner_radius = 11,
 		},
 		click_script = "aerospace workspace " .. workspaceName,
 	})
@@ -125,7 +118,7 @@ local function addWorkspaceItem(workspaceName)
 		sbar.animate("tanh", 12, function()
 			item:set({
 				icon = { color = palette.lavender },
-				background = { color = palette.surface2 },
+				background = { color = palette.surface0 },
 			})
 		end)
 	end)
@@ -143,8 +136,19 @@ local function createWorkspaces()
 		for workspaceName in workspacesOutput:gmatch("[^\r\n]+") do
 			addWorkspaceItem(workspaceName)
 		end
+		settings.spacer(constants.items.SPACES .. "_end", "left", 5)
 
-		settings.separator(constants.items.SPACES .. "_separator")
+		-- left group: logo, menu toggle, app menus and workspaces in one box
+		-- (members listed by name: regex members proved unreliable here)
+		local members = { "power", constants.items.MENU_TOGGLE }
+		for index = 1, 15 do
+			table.insert(members, constants.items.MENU .. "." .. index)
+		end
+		for spaceName in pairs(spaces) do
+			table.insert(members, spaceName)
+		end
+		table.insert(members, constants.items.SPACES .. "_end")
+		sbar.add("bracket", "group.left", members, settings.group())
 
 		findAndSelectCurrentWorkspace()
 	end)
@@ -153,7 +157,6 @@ end
 swapWatcher:subscribe(constants.events.SWAP_MENU_AND_SPACES, function(env)
 	local isShowingSpaces = env.isShowingMenu == "off" and true or false
 	sbar.set("/" .. constants.items.SPACES .. "\\..*/", { drawing = isShowingSpaces })
-	sbar.set(constants.items.SPACES .. "_separator", { drawing = isShowingSpaces })
 end)
 
 currentWorkspaceWatcher:subscribe(constants.events.AEROSPACE_WORKSPACE_CHANGED, function(env)

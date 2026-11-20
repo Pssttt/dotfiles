@@ -1,6 +1,6 @@
 local settings = require("config.settings")
 
--- Full-width bar flush with the top edge of the screen
+-- Transparent floating bar; left/center/right groups draw their own boxes
 sbar.bar({
 	topmost = "window",
 	height = settings.dimens.graphics.bar.height,
@@ -12,5 +12,5 @@ sbar.bar({
 	corner_radius = 0,
 	y_offset = settings.dimens.graphics.bar.offset,
 	border_width = 0,
-	shadow = true,
+	shadow = false,
 })

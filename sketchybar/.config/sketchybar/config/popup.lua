@@ -46,7 +46,7 @@ function popup.container(align)
     background = {
       color = colors.popup.bg,
       border_color = colors.popup.border,
-      border_width = 1,
+      border_width = 2,
       corner_radius = 14,
       shadow = { drawing = true },
     },

@@ -2,9 +2,9 @@ local padding <const> = {
 	background = 8,
 	icon = 10,
 	label = 8,
-	bar = 0,
-	left = 10,
-	right = 12,
+	bar = 6,
+	left = 0,
+	right = 0,
 	item = 6,
 	widget = 9,
 	chip_gap = 9,
@@ -13,12 +13,17 @@ local padding <const> = {
 
 local graphics <const> = {
 	bar = {
-		height = 32,
-		offset = 0,
+		height = 36,
+		offset = 6,
 	},
 	background = {
 		height = 24,
 		corner_radius = 8,
+	},
+	group = {
+		height = 32,
+		corner_radius = 14,
+		border_width = 2,
 	},
 	underline = {
 		height = 3,

@@ -48,13 +48,17 @@ local colors <const> = {
   accent = palette.mauve,
 
   bar = {
-    bg = 0xf2181825, -- mantle
+    bg = 0x00000000, -- transparent: the groups draw themselves
     border = palette.surface0,
     transparent = 0x00000000,
   },
+  group = {
+    bg = 0xff1e1e2e, -- base, opaque so windows behind never show through
+    border = 0x99cba6f7, -- mauve, Hyprland-style active border
+  },
   popup = {
     bg = 0xff1e1e2e,
-    border = palette.surface1,
+    border = 0x99cba6f7,
     hover = palette.surface1,
   },
   slider = {

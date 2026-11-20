@@ -3,40 +3,21 @@ local settings = require("config.settings")
 
 local palette <const> = settings.colors.palette
 
--- Centered clock: muted date, bold time
-local calendar = sbar.add("item", constants.items.CALENDAR, {
-  position = "center",
+-- Waybar-style clock module, rightmost in the right group
+local calendar = sbar.add("item", constants.items.CALENDAR, settings.widget(palette.mauve))
+calendar:set({
+  position = "right",
   update_freq = 1,
-  padding_left = 0,
-  padding_right = 0,
-  icon = {
-    color = palette.overlay,
-    padding_left = 0,
-    padding_right = 8,
-    font = {
-      family = settings.fonts.text,
-      style = settings.fonts.styles.regular,
-      size = settings.dimens.text.label,
-    },
-  },
+  padding_right = 12,
+  icon = { string = "\u{f0954}" }, -- nf-md-clock_outline
   label = {
     color = palette.text,
-    padding_left = 0,
-    padding_right = 0,
-    font = {
-      family = settings.fonts.text,
-      style = settings.fonts.styles.bold,
-      size = 14.0,
-    },
+    font = { style = settings.fonts.styles.bold },
   },
-  background = { drawing = false },
 })
 
 calendar:subscribe({ "forced", "routine", "system_woke" }, function()
-  calendar:set({
-    icon = os.date("%a %d %b"),
-    label = os.date("%H:%M"),
-  })
+  calendar:set({ label = os.date("%a %d %b  %H:%M") })
 end)
 
 calendar:subscribe("mouse.clicked", function()

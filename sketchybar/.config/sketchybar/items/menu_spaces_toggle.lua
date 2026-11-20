@@ -38,7 +38,7 @@ local function addToggle()
   sbar.add("item", constants.items.MENU_TOGGLE .. ".padding", {
     width = 0
   })
-  settings.separator(constants.items.MENU_TOGGLE .. ".separator")
+
 
   menuToggle:subscribe("mouse.entered", function(env)
     sbar.animate("tanh", 30, function()

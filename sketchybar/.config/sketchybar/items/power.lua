@@ -5,8 +5,8 @@ local popup = require("config.popup")
 local palette <const> = settings.colors.palette
 
 local power = sbar.add("item", "power", {
-  padding_left = 0,
-  padding_right = 4,
+  padding_left = 6,
+  padding_right = 2,
   icon = {
     string = settings.icons.text.apple,
     color = palette.mauve,

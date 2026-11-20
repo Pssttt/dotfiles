@@ -1,122 +1,348 @@
-local colors = require("config.colors")
+-- Now playing: a group to the left of the right-hand modules, plus a card
+-- with artwork, a seekable progress bar and controls.
+--
+-- Source: nowplaying-cli (works with Pine Player). Notes from testing:
+--  * sketchybar's media_change event never fires here, so we poll.
+--  * get-raw reports ElapsedTime only as a snapshot taken at the last
+--    play/pause/seek/track change, with no timestamp. We anchor the snapshot
+--    to the moment we first see it and count forward while playing. After a
+--    reload mid-song the position can be off until the next play/pause/seek.
+local settings = require("config.settings")
+local popup = require("config.popup")
 
-local whitelist = {
-	["Spotify"] = true,
+local palette <const> = settings.colors.palette
+
+local NAME <const> = "media"
+-- each check costs ~35ms CPU: poll fast only while something is playing
+local POLL_PLAYING <const> = 1
+local POLL_IDLE <const> = 3
+local ART_DIR <const> = "/tmp/sketchybar-media"
+local ART_SIZE <const> = popup.WIDTH - 24 -- points, inset like the text rows
+local ART_SCALE <const> = 0.5 -- artwork is fetched at 2x for retina
+local SEPARATOR <const> = "\u{2219}" -- Pine Player joins artist and album with "∙"
+
+local ICON_PLAYING <const> = "\u{f075a}" -- nf-md-music
+local ICON_PAUSED <const> = "\u{f03e4}" -- nf-md-pause
+local ICON_PREVIOUS <const> = "\u{f04ae}" -- nf-md-skip_previous
+local ICON_NEXT <const> = "\u{f04ad}" -- nf-md-skip_next
+local ICON_PLAY <const> = "\u{f040a}" -- nf-md-play
+local ICON_ALBUM <const> = "\u{f0025}" -- nf-md-album
+
+-- raw output minus the (large) artwork blob
+local INFO_CMD <const> = "nowplaying-cli get-raw 2>/dev/null | grep -v ArtworkData"
+
+-- Bar ----------------------------------------------------------------------
+-- gap between this group and the right group (added first = sits rightmost)
+settings.spacer(NAME .. ".gap", "right", 8)
+
+local media = sbar.add("item", NAME, settings.widget(palette.mauve))
+media:set({
+  position = "right",
+  drawing = false,
+  updates = true, -- keep polling while hidden so it can reappear
+  update_freq = POLL_IDLE,
+  padding_left = 12,
+  padding_right = 12,
+  icon = { string = ICON_PLAYING },
+  label = {
+    color = palette.text,
+    max_chars = 40,
+    font = { style = settings.fonts.styles.bold },
+  },
+  popup = popup.container("right"),
+})
+
+local group = sbar.add("bracket", "group.media", { media.name }, settings.group())
+group:set({ drawing = false })
+
+-- Card ---------------------------------------------------------------------
+-- Artwork: item padding does the horizontal inset (background x_offset is
+-- ignored for images); the taller background leaves room above and below.
+local art = sbar.add("item", NAME .. ".card.art", {
+  position = "popup." .. media.name,
+  width = ART_SIZE,
+  padding_left = 12,
+  padding_right = 12,
+  icon = { drawing = false },
+  label = { drawing = false },
+  drawing = false,
+  background = {
+    drawing = true,
+    color = settings.colors.transparent,
+    height = ART_SIZE + 16,
+    image = { drawing = true, scale = ART_SCALE, corner_radius = 10 },
+  },
+})
+
+local header = popup.header(media, { name = NAME .. ".card.header", icon = ICON_ALBUM, title = "Nothing playing" })
+local artistRow = popup.row(media, { name = NAME .. ".card.artist", key = "Artist" })
+local albumRow = popup.row(media, { name = NAME .. ".card.album", key = "Album" })
+
+-- Seekable progress bar + elapsed / total
+local progress = sbar.add("slider", NAME .. ".card.progress", ART_SIZE, {
+  position = "popup." .. media.name,
+  padding_left = 12,
+  padding_right = 12,
+  slider = {
+    highlight_color = palette.mauve,
+    percentage = 0,
+    knob = { drawing = true, color = palette.text, font = { size = 14.0 } },
+    background = { height = 4, corner_radius = 2, color = palette.surface1 },
+  },
+  background = { drawing = true, color = settings.colors.transparent, height = 18 },
+})
+
+local times = popup.row(media, { name = NAME .. ".card.times", key = "0:00", value = "0:00" })
+times:set({ label = { color = palette.overlay, font = { style = settings.fonts.styles.regular } } })
+popup.divider(media)
+
+local state = {
+  title = nil,
+  playing = false,
+  duration = 0,
+  -- position tracking (see header comment)
+  snapshot = nil, -- last raw ElapsedTime seen
+  snapshotRate = nil,
+  baseElapsed = 0,
+  anchor = os.time(),
+  artCounter = 0,
 }
 
-local media_cover = sbar.add("item", {
-	position = "left",
-	background = {
-		image = {
-			string = "media.artwork",
-			scale = 0.80,
-		},
-		color = colors.transparent,
-	},
-	label = { drawing = false },
-	icon = { drawing = false },
-	drawing = false,
-	updates = true,
-	popup = {
-		align = "center",
-		horizontal = true,
-	},
-})
+local refresh -- forward declaration, used by the buttons
 
-local media_artist = sbar.add("item", {
-	position = "left",
-	drawing = false,
-	padding_left = 3,
-	padding_right = 0,
-	width = 0,
-	icon = { drawing = false },
-	label = {
-		width = 0,
-		font = { size = 9 },
-		color = colors.with_alpha(colors.white, 0.6),
-		max_chars = 24,
-		y_offset = 6,
-	},
-})
-
-local media_title = sbar.add("item", {
-	position = "left",
-	drawing = false,
-	padding_left = 3,
-	padding_right = 0,
-	icon = { drawing = false },
-	label = {
-		font = { size = 11 },
-		width = 0,
-		max_chars = 35,
-		y_offset = -5,
-	},
-})
-
-sbar.add("item", {
-	position = "popup." .. media_cover.name,
-	icon = { string = icons.media.back },
-	label = { drawing = false },
-	click_script = "nowplaying-cli previous",
-})
-sbar.add("item", {
-	position = "popup." .. media_cover.name,
-	icon = { string = icons.media.play_pause },
-	label = { drawing = false },
-	click_script = "nowplaying-cli togglePlayPause",
-})
-sbar.add("item", {
-	position = "popup." .. media_cover.name,
-	icon = { string = icons.media.forward },
-	label = { drawing = false },
-	click_script = "nowplaying-cli next",
-})
-
-local interrupt = 0
-local function animate_detail(detail)
-	if not detail then
-		interrupt = interrupt - 1
-	end
-	if interrupt > 0 and not detail then
-		return
-	end
-
-	sbar.animate("tanh", 30, function()
-		media_artist:set({ label = { width = detail and "dynamic" or 0 } })
-		media_title:set({ label = { width = detail and "dynamic" or 0 } })
-	end)
+local function control(command)
+  sbar.exec("nowplaying-cli " .. command, function()
+    sbar.delay(0.3, function() refresh() end)
+  end)
 end
 
-media_cover:subscribe("media_change", function(env)
-	if whitelist[env.INFO.app] then
-		local drawing = (env.INFO.state == "playing")
-		media_artist:set({ drawing = drawing, label = env.INFO.artist })
-		media_title:set({ drawing = drawing, label = env.INFO.title })
-		media_cover:set({ drawing = drawing })
+local playPause = popup.button(media, {
+  name = NAME .. ".card.playpause",
+  icon = ICON_PAUSED,
+  color = palette.mauve,
+  label = "Pause",
+})
+popup.button(media, {
+  name = NAME .. ".card.next",
+  icon = ICON_NEXT,
+  color = palette.lavender,
+  label = "Next",
+  on_click = function() control("next") end,
+})
+popup.button(media, {
+  name = NAME .. ".card.previous",
+  icon = ICON_PREVIOUS,
+  color = palette.lavender,
+  label = "Previous",
+  on_click = function() control("previous") end,
+})
 
-		if drawing then
-			animate_detail(true)
-			interrupt = interrupt + 1
-			sbar.delay(5, animate_detail)
-		else
-			media_cover:set({ popup = { drawing = false } })
-		end
-	end
+-- Helpers ------------------------------------------------------------------
+-- sbar.exec hands JSON output over already decoded as a table; fall back to
+-- pattern matching if it ever arrives as a string.
+local function rawValue(raw, key)
+  local fullKey = "kMRMediaRemoteNowPlayingInfo" .. key
+  if type(raw) == "table" then
+    return raw[fullKey]
+  end
+  if type(raw) ~= "string" then return nil end
+  local number = raw:match('"' .. fullKey .. '"%s*:%s*([%d%.%-]+)')
+  if number then return tonumber(number) end
+  return raw:match('"' .. fullKey .. '"%s*:%s*"(.-)"%s*[,\n}]')
+end
+
+local function rawNumber(raw, key)
+  return tonumber(rawValue(raw, key))
+end
+
+local function rawString(raw, key)
+  local value = rawValue(raw, key)
+  if value == nil or value == "" then return nil end
+  return tostring(value)
+end
+
+local function formatTime(seconds)
+  seconds = math.max(0, math.floor(tonumber(seconds) or 0))
+  local hours = math.floor(seconds / 3600)
+  local minutes = math.floor((seconds % 3600) / 60)
+  local secs = seconds % 60
+  if hours > 0 then
+    return string.format("%d:%02d:%02d", hours, minutes, secs)
+  end
+  return string.format("%d:%02d", minutes, secs)
+end
+
+local function splitArtist(artist, album)
+  if artist and not album then
+    local cut = artist:find(SEPARATOR, 1, true)
+    if cut then
+      return artist:sub(1, cut - 1), artist:sub(cut + #SEPARATOR)
+    end
+  end
+  return artist, album
+end
+
+local function currentElapsed()
+  local elapsed = state.baseElapsed
+  if state.playing then
+    elapsed = elapsed + (os.time() - state.anchor)
+  end
+  if state.duration > 0 then
+    elapsed = math.min(elapsed, state.duration)
+  end
+  return elapsed
+end
+
+-- Bar item + play/pause button reflect `state.playing`
+local function renderPlayState()
+  local accent = state.playing and palette.mauve or palette.overlay
+  media:set({
+    icon = { string = state.playing and ICON_PLAYING or ICON_PAUSED, color = accent },
+    label = { color = state.playing and palette.text or palette.overlay },
+  })
+  header:set({ icon = { color = accent } })
+  playPause:set({
+    icon = { string = state.playing and ICON_PAUSED or ICON_PLAY },
+    label = { string = state.playing and "Pause" or "Play" },
+  })
+end
+
+local function renderProgress()
+  local elapsed = currentElapsed()
+  local percentage = state.duration > 0 and math.floor(elapsed / state.duration * 100) or 0
+  progress:set({ slider = { percentage = percentage } })
+  times:set({
+    icon = { string = formatTime(elapsed) },
+    label = { string = formatTime(state.duration) },
+  })
+end
+
+-- New artwork file per track: sketchybar caches images by path
+local function loadArtwork()
+  state.artCounter = state.artCounter + 1
+  local file = ART_DIR .. "/cover-" .. state.artCounter .. ".jpg"
+  local pixels = math.floor(ART_SIZE / ART_SCALE)
+  local command = "mkdir -p " .. ART_DIR
+    .. " && rm -f " .. ART_DIR .. "/*.jpg"
+    .. " && nowplaying-cli get artworkData | base64 -D -o " .. file .. " 2>/dev/null"
+    .. " && sips -z " .. pixels .. " " .. pixels .. " " .. file .. " >/dev/null 2>&1"
+    .. " && echo ok"
+
+  sbar.exec(command, function(result)
+    local ok = type(result) == "string" and result:find("ok") ~= nil
+    art:set({ drawing = ok, background = { image = { string = ok and file or "" } } })
+  end)
+end
+
+local function hide()
+  state.title = nil
+  state.playing = false
+  media:set({ drawing = false, update_freq = POLL_IDLE, popup = { drawing = false } })
+  group:set({ drawing = false })
+end
+
+-- Persist the snapshot anchor so a sketchybar reload doesn't lose the position.
+-- If the saved snapshot matches what the player reports, reuse its anchor time.
+local ANCHOR_FILE <const> = ART_DIR .. "/anchor"
+
+local function restoreAnchor(title, snapshot, rate)
+  local key = title .. "\n" .. tostring(snapshot) .. "\n" .. tostring(rate)
+  local file = io.open(ANCHOR_FILE, "r")
+  if file then
+    local saved = file:read("a")
+    file:close()
+    local savedKey, savedAnchor = saved:match("^(.*)\n(%d+)$")
+    if savedKey == key and tonumber(savedAnchor) then
+      state.anchor = tonumber(savedAnchor)
+      return
+    end
+  end
+  os.execute("mkdir -p " .. ART_DIR)
+  file = io.open(ANCHOR_FILE, "w")
+  if file then
+    file:write(key .. "\n" .. state.anchor)
+    file:close()
+  end
+end
+
+-- Update -------------------------------------------------------------------
+refresh = function()
+  sbar.exec(INFO_CMD, function(raw)
+    local title = rawString(raw, "Title")
+    if not title then
+      hide()
+      return
+    end
+
+    local artist, album = splitArtist(rawString(raw, "Artist"), rawString(raw, "Album"))
+    local rate = rawNumber(raw, "PlaybackRate") or 0
+    local snapshot = rawNumber(raw, "ElapsedTime") or 0
+
+    -- re-anchor whenever the player publishes a new snapshot
+    if title ~= state.title or snapshot ~= state.snapshot or rate ~= state.snapshotRate then
+      state.baseElapsed = snapshot
+      state.anchor = os.time()
+      state.snapshot = snapshot
+      state.snapshotRate = rate
+      restoreAnchor(title, snapshot, rate)
+    end
+
+    state.playing = rate > 0
+    state.duration = rawNumber(raw, "Duration") or 0
+
+    media:set({
+      drawing = true,
+      update_freq = state.playing and POLL_PLAYING or POLL_IDLE,
+      label = { string = artist and (title .. " · " .. artist) or title },
+    })
+    group:set({ drawing = true })
+    header:set({ label = { string = title } })
+    artistRow:set({ label = { string = artist or "—" } })
+    albumRow:set({ label = { string = album or "—" } })
+
+    renderPlayState()
+    renderProgress()
+
+    if title ~= state.title then
+      state.title = title
+      loadArtwork()
+    end
+  end)
+end
+
+-- Play/pause: update the UI immediately, then confirm with the player
+local function togglePlayPause()
+  local wasPlaying = state.playing
+  state.baseElapsed = currentElapsed()
+  state.anchor = os.time()
+  state.playing = not wasPlaying
+  renderPlayState()
+  control(wasPlaying and "pause" or "play")
+end
+
+playPause:subscribe("mouse.clicked", togglePlayPause)
+
+progress:subscribe("mouse.clicked", function(env)
+  if state.duration <= 0 then return end
+  local target = math.floor(state.duration * (tonumber(env.PERCENTAGE) or 0) / 100)
+  state.baseElapsed = target
+  state.anchor = os.time()
+  renderProgress()
+  control("seek " .. target)
 end)
 
-media_cover:subscribe("mouse.entered", function(env)
-	interrupt = interrupt + 1
-	animate_detail(true)
+media:subscribe({ "routine", "forced", "system_woke", "media_change" }, refresh)
+
+media:subscribe("mouse.clicked", function(env)
+  if env.BUTTON == "right" then
+    togglePlayPause()
+    return
+  end
+  media:set({ popup = { drawing = "toggle" } })
 end)
 
-media_cover:subscribe("mouse.exited", function(env)
-	animate_detail(false)
+media:subscribe("mouse.exited.global", function()
+  media:set({ popup = { drawing = false } })
 end)
 
-media_cover:subscribe("mouse.clicked", function(env)
-	media_cover:set({ popup = { drawing = "toggle" } })
-end)
-
-media_title:subscribe("mouse.exited.global", function(env)
-	media_cover:set({ popup = { drawing = false } })
-end)
+refresh()

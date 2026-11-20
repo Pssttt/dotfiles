@@ -3,8 +3,8 @@ local settings = require("config.settings")
 
 local palette <const> = settings.colors.palette
 
--- Windows on the current workspace: the focused app shows icon + name,
--- the rest show a dim icon only.
+-- Center group (Waybar "window" module): apps on the current workspace,
+-- the focused one shows its name.
 local frontApps = {}
 
 local frontAppWatcher = sbar.add("item", {
@@ -26,6 +26,7 @@ end
 
 local function updateWindows(windows)
 	sbar.remove("/" .. constants.items.FRONT_APPS .. "\\..*/")
+	sbar.remove("group.center")
 
 	frontApps = {}
 	local foundWindows = {}
@@ -46,8 +47,9 @@ local function updateWindows(windows)
 			local icon = settings.icons.apps[windowName] or settings.icons.apps["Default"] or ":default:"
 
 			frontApps[windowName] = sbar.add("item", constants.items.FRONT_APPS .. "." .. windowName, {
-				padding_left = 0,
-				padding_right = 0,
+				position = "center",
+				padding_left = 4,
+				padding_right = 4,
 				icon = {
 					string = icon,
 					font = settings.fonts.icons(14),
@@ -71,6 +73,10 @@ local function updateWindows(windows)
 				selectFocusedWindow(env.INFO)
 			end)
 		end
+	end
+
+	if next(frontApps) ~= nil then
+		sbar.add("bracket", "group.center", { "/" .. constants.items.FRONT_APPS .. "\\..*/" }, settings.group())
 	end
 
 	sbar.exec(constants.aerospace.GET_CURRENT_WINDOW, function(frontAppName)

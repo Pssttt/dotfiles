@@ -24,6 +24,35 @@ local function widget(color)
   }
 end
 
+-- Hyprland/Waybar-style module group: rounded box with an accent border.
+-- Used as bracket properties.
+local function group()
+  return {
+    background = {
+      drawing = true,
+      color = colors.group.bg,
+      border_color = colors.group.border,
+      border_width = dimens.graphics.group.border_width,
+      height = dimens.graphics.group.height,
+      corner_radius = dimens.graphics.group.corner_radius,
+    },
+  }
+end
+
+-- Fixed-width empty gap. Icon/label must be switched off, otherwise their
+-- default padding makes the item far wider than its width.
+local function spacer(name, position, width)
+  return sbar.add("item", name, {
+    position = position or "left",
+    width = width,
+    padding_left = 0,
+    padding_right = 0,
+    icon = { drawing = false },
+    label = { drawing = false },
+    background = { drawing = false },
+  })
+end
+
 -- Thin vertical divider between groups
 local function separator(name, position)
   return sbar.add("item", name, {
@@ -47,5 +76,7 @@ return {
   colors = colors,
   icons = icons,
   widget = widget,
+  group = group,
+  spacer = spacer,
   separator = separator,
 }
