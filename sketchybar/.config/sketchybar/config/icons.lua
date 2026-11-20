@@ -282,6 +282,8 @@ local apps <const> = {
 
 local text <const> = {
   nerdfont = {
+    earbuds = "󰥰",
+    case = "󱉝",
     plus = "",
     loading = "",
     apple = "",

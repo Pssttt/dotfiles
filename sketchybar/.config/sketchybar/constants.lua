@@ -15,6 +15,7 @@ local items <const> = {
   FRONT_APPS = "front_apps",
   MESSAGE = "message",
   VOLUME = "widgets.volume",
+  GALAXY_BUDS = "widgets.galaxy_buds",
   WIFI = "widgets.wifi",
   BATTERY = "widgets.battery",
   CALENDAR = "widgets.calendar",
