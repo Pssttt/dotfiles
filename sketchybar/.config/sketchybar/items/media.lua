@@ -87,6 +87,9 @@ local progress = sbar.add("slider", NAME .. ".card.progress", ART_SIZE, {
   position = "popup." .. media.name,
   padding_left = 12,
   padding_right = 12,
+  -- sliders still get the default icon/label padding, which widened the card
+  icon = { drawing = false, padding_left = 0, padding_right = 0 },
+  label = { drawing = false, padding_left = 0, padding_right = 0 },
   slider = {
     highlight_color = palette.mauve,
     percentage = 0,
@@ -170,6 +173,41 @@ local function rawString(raw, key)
   return tostring(value)
 end
 
+-- Fit the bar label into the free space between the center group (or the
+-- left group when the center is empty) and the right group, so long titles
+-- scroll instead of sliding under the center box.
+local CHAR_WIDTH <const> = 7.8 -- Hack Nerd Font Bold at 13pt
+local CHROME_WIDTH <const> = 12 + 15 + 6 + 12 + 12 -- paddings, icon, group gaps
+local MIN_CHARS <const> = 8
+local MAX_CHARS <const> = 40
+
+local function firstRect(query)
+  if type(query) ~= "table" or type(query.bounding_rects) ~= "table" then return nil end
+  for _, rect in pairs(query.bounding_rects) do
+    if rect.origin and rect.origin[1] > -9000 then return rect end
+  end
+  return nil
+end
+
+local function fitLabel()
+  local bar = sbar.query("bar")
+  local present = {}
+  for _, name in ipairs((type(bar) == "table" and bar.items) or {}) do
+    present[name] = true
+  end
+  if not present["group.right"] then return end
+
+  local right = firstRect(sbar.query("group.right"))
+  local neighbour = present["group.center"] and firstRect(sbar.query("group.center"))
+    or (present["group.left"] and firstRect(sbar.query("group.left")))
+  if not right or not neighbour then return end
+
+  local available = right.origin[1] - (neighbour.origin[1] + neighbour.size[1]) - CHROME_WIDTH
+  local chars = math.floor(available / CHAR_WIDTH)
+  chars = math.max(MIN_CHARS, math.min(MAX_CHARS, chars))
+  media:set({ label = { max_chars = chars } })
+end
+
 local function formatTime(seconds)
   seconds = math.max(0, math.floor(tonumber(seconds) or 0))
   local hours = math.floor(seconds / 3600)
@@ -218,28 +256,54 @@ end
 
 local function renderProgress()
   local elapsed = currentElapsed()
-  local percentage = state.duration > 0 and math.floor(elapsed / state.duration * 100) or 0
-  progress:set({ slider = { percentage = percentage } })
+  -- streams/web video may report no duration: show elapsed only, no bar
+  local hasDuration = state.duration > 0
+  progress:set({
+    drawing = hasDuration,
+    slider = { percentage = hasDuration and math.floor(elapsed / state.duration * 100) or 0 },
+  })
   times:set({
     icon = { string = formatTime(elapsed) },
-    label = { string = formatTime(state.duration) },
+    label = { string = hasDuration and formatTime(state.duration) or "" },
   })
 end
 
--- New artwork file per track: sketchybar caches images by path
+-- New artwork file per track: sketchybar caches images by path.
+-- Keeps the aspect ratio (YouTube thumbnails are 16:9, album covers square)
+-- and sizes/centers the row to match.
 local function loadArtwork()
   state.artCounter = state.artCounter + 1
   local file = ART_DIR .. "/cover-" .. state.artCounter .. ".jpg"
-  local pixels = math.floor(ART_SIZE / ART_SCALE)
+  local maxPixels = math.floor(ART_SIZE / ART_SCALE)
   local command = "mkdir -p " .. ART_DIR
     .. " && rm -f " .. ART_DIR .. "/*.jpg"
     .. " && nowplaying-cli get artworkData | base64 -D -o " .. file .. " 2>/dev/null"
-    .. " && sips -z " .. pixels .. " " .. pixels .. " " .. file .. " >/dev/null 2>&1"
-    .. " && echo ok"
+    .. " && sips -Z " .. maxPixels .. " " .. file .. " >/dev/null 2>&1"
+    .. " && printf 'art:%s %s' $(sips -g pixelWidth -g pixelHeight " .. file .. " | awk '/pixel/ {print $2}')"
 
   sbar.exec(command, function(result)
-    local ok = type(result) == "string" and result:find("ok") ~= nil
-    art:set({ drawing = ok, background = { image = { string = ok and file or "" } } })
+    local width, height
+    if type(result) == "string" then
+      width, height = result:match("art:(%d+) (%d+)")
+    end
+    width, height = tonumber(width), tonumber(height)
+    if not width or not height then
+      art:set({ drawing = false })
+      return
+    end
+
+    local shownWidth = math.floor(width * ART_SCALE)
+    local inset = 12 + math.floor((ART_SIZE - shownWidth) / 2)
+    art:set({
+      drawing = true,
+      width = shownWidth,
+      padding_left = inset,
+      padding_right = inset,
+      background = {
+        height = math.floor(height * ART_SCALE) + 16,
+        image = { string = file },
+      },
+    })
   end)
 end
 
@@ -311,6 +375,7 @@ refresh = function()
       label = { string = artist and (title .. " · " .. artist) or title },
     })
     group:set({ drawing = true })
+    fitLabel()
     header:set({ label = { string = title } })
     artistRow:set({ label = { string = artist or "—" } })
     albumRow:set({ label = { string = album or "—" } })

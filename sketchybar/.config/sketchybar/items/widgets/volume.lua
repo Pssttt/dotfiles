@@ -29,6 +29,9 @@ local volumeSlider = sbar.add("slider", constants.items.VOLUME .. ".slider", pop
   position = "popup." .. volumeBracket.name,
   padding_left = 12,
   padding_right = 12,
+  -- sliders still get the default icon/label padding, which widened the card
+  icon = { drawing = false, padding_left = 0, padding_right = 0 },
+  label = { drawing = false, padding_left = 0, padding_right = 0 },
   slider = {
     highlight_color = palette.peach,
     knob = { drawing = true, color = palette.text, font = { size = 18.0 } },

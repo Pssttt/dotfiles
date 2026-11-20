@@ -21,6 +21,8 @@ sbar.default({
     color = settings.colors.white,
     padding_left = settings.dimens.padding.label,
     padding_right = settings.dimens.padding.label,
+    -- slower than the default (100) so long titles stay readable
+    scroll_duration = 250,
   },
   background = {
     height = settings.dimens.graphics.background.height,
