@@ -15,21 +15,13 @@ local noiseModes = {
   [2] = { icon = "󰂰", name = "Ambient", color = settings.colors.yellow },
 }
 
-local galaxyBuds = sbar.add("item", constants.items.GALAXY_BUDS, {
+local galaxyBuds = sbar.add("item", constants.items.GALAXY_BUDS, settings.chip(settings.colors.palette.teal))
+galaxyBuds:set({
   position = "right",
   update_freq = 30,
   drawing = false,
-  icon = {
-    string = settings.icons.text.earbuds or "󰥰",
-    color = settings.colors.grey,
-    padding_left = settings.dimens.padding.icon,
-    padding_right = 0,
-  },
-  label = {
-    string = "",
-    padding_left = 4,
-    padding_right = settings.dimens.padding.label,
-  },
+  icon = { string = settings.icons.text.earbuds or "󰥰" },
+  label = { string = "" },
 })
 
 local budsTitle = sbar.add("item", {
@@ -180,7 +172,7 @@ local function updateGalaxyBuds()
         batt = math.max(nLeft, nRight)
       end
 
-      local color = settings.colors.white
+      local color = settings.colors.palette.teal
       if batt <= 15 then
         color = settings.colors.red
       elseif batt <= 30 then
@@ -192,8 +184,8 @@ local function updateGalaxyBuds()
 
       galaxyBuds:set({
         drawing = true,
-        icon = { string = settings.icons.text.earbuds or "󰥰", color = color },
-        label = { string = lead .. batt .. "%", drawing = true, padding_right = settings.dimens.padding.label },
+        icon = { string = settings.icons.text.earbuds or "󰥰", background = { color = color } },
+        label = { string = lead .. batt .. "%", drawing = true },
       })
 
       budsTitle:set({ label = { string = name or "Galaxy Buds" } })

@@ -3,7 +3,8 @@ local settings = require("config.settings")
 
 local isCharging = false
 
-local battery = sbar.add("item", constants.items.battery, {
+local battery = sbar.add("item", constants.items.BATTERY, settings.chip(settings.colors.green))
+battery:set({
   position = "right",
   update_freq = 60,
 })
@@ -66,12 +67,9 @@ battery:subscribe({ "routine", "power_source_change", "system_woke" }, function(
     battery:set({
       icon = {
         string = icon,
-        color = color
+        background = { color = charging and settings.colors.palette.yellow or color },
       },
-      label = {
-        string = lead .. label,
-        padding_left = 0,
-      },
+      label = { string = lead .. label },
     })
   end)
 end)

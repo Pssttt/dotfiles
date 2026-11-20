@@ -3,12 +3,10 @@ local settings = require("config.settings")
 
 local currentAudioDevice = "None"
 
-local volumeValue = sbar.add("item", constants.items.VOLUME .. ".value", {
+local volumeValue = sbar.add("item", constants.items.VOLUME .. ".value", settings.chip(settings.colors.palette.peach))
+volumeValue:set({
   position = "right",
-  label = {
-    string = "??%",
-    padding_left = 0,
-  },
+  label = { string = "??%" },
 })
 
 local volumeBracket = sbar.add("bracket", constants.items.VOLUME .. ".bracket", { volumeValue.name }, {
@@ -60,11 +58,11 @@ volumeValue:subscribe("volume_change", function(env)
 
     local hasVolume = volume ~= 0
     volumeValue:set({
-      icon = icon,
-      label = {
-        string = hasVolume and lead .. volume .. "%" or "",
-        padding_right = hasVolume and 8 or 0,
+      icon = {
+        string = icon,
+        background = { color = hasVolume and settings.colors.palette.peach or settings.colors.palette.overlay },
       },
+      label = { string = hasVolume and lead .. volume .. "%" or "mute" },
     })
   end)
 end)

@@ -16,31 +16,31 @@ end
 
 local function addToggle()
   local menuToggle = sbar.add("item", constants.items.MENU_TOGGLE, {
+    padding_left = settings.dimens.padding.chip_gap,
+    padding_right = settings.dimens.padding.chip_gap,
     icon = {
-      string = settings.icons.text.switch.on
+      string = settings.icons.text.switch.on,
+      color = settings.colors.palette.lavender,
     },
     label = {
       width = 0,
-      color = settings.colors.bg1,
+      padding_left = 0,
+      color = settings.colors.palette.crust,
       string = "Spaces",
+      font = { style = settings.fonts.styles.bold },
     },
-    background = {
-      color = settings.colors.with_alpha(settings.colors.dirty_white, 0.0),
-    }
+    background = settings.chip(settings.colors.palette.lavender).background,
   })
 
   sbar.add("item", constants.items.MENU_TOGGLE .. ".padding", {
-    width = settings.dimens.padding.label
+    width = settings.dimens.padding.chip_gap
   })
 
   menuToggle:subscribe("mouse.entered", function(env)
     sbar.animate("tanh", 30, function()
       menuToggle:set({
-        background = {
-          color = { alpha = 1.0 },
-          border_color = { alpha = 0.5 },
-        },
-        icon = { color = settings.colors.bg1 },
+        background = { color = settings.colors.palette.lavender },
+        icon = { color = settings.colors.palette.crust },
         label = { width = "dynamic" }
       })
     end)
@@ -49,11 +49,8 @@ local function addToggle()
   menuToggle:subscribe("mouse.exited", function(env)
     sbar.animate("tanh", 30, function()
       menuToggle:set({
-        background = {
-          color = { alpha = 0.0 },
-          border_color = { alpha = 0.0 },
-        },
-        icon = { color = settings.colors.white },
+        background = { color = settings.colors.chip.bg },
+        icon = { color = settings.colors.palette.lavender },
         label = { width = 0 }
       })
     end)

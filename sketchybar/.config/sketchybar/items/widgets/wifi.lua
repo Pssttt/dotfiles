@@ -8,6 +8,7 @@ sbar.exec("killall network_load >/dev/null; $CONFIG_DIR/bridge/network_load/bin/
 local wifiUp = sbar.add("item", constants.items.WIFI .. ".up", {
 	position = "right",
 	width = 0,
+	padding_right = settings.dimens.padding.chip_gap,
 	icon = {
 		padding_left = 0,
 		padding_right = 0,
@@ -24,6 +25,7 @@ local wifiUp = sbar.add("item", constants.items.WIFI .. ".up", {
 			size = 10.0,
 		},
 		color = settings.colors.orange,
+		padding_right = 11,
 		string = "??? Bps",
 	},
 	y_offset = 4,
@@ -47,15 +49,20 @@ local wifiDown = sbar.add("item", constants.items.WIFI .. ".down", {
 			size = 10,
 		},
 		color = settings.colors.blue,
+		padding_right = 11,
 		string = "??? Bps",
 	},
 	y_offset = -4,
 })
 
+-- Block: blue icon segment + stacked up/down rates; the bracket draws the dark body
+local wifiChip = settings.chip(settings.colors.palette.blue)
 local wifi = sbar.add("item", constants.items.WIFI .. ".padding", {
 	position = "right",
-	label = { drawing = false },
+	padding_left = settings.dimens.padding.chip_gap,
 	padding_right = 0,
+	icon = wifiChip.icon,
+	label = { drawing = false },
 })
 
 local wifiBracket = sbar.add("bracket", constants.items.WIFI .. ".bracket", {
@@ -63,6 +70,7 @@ local wifiBracket = sbar.add("bracket", constants.items.WIFI .. ".bracket", {
 	wifiUp.name,
 	wifiDown.name,
 }, {
+	background = wifiChip.background,
 	popup = { align = "center" },
 })
 
@@ -148,7 +156,6 @@ local router = sbar.add("item", {
 	},
 })
 
-sbar.add("item", { position = "right", width = settings.dimens.padding.item })
 
 wifiUp:subscribe("network_update", function(env)
 	local upColor = (env.upload == "000 Bps") and settings.colors.grey or settings.colors.orange
@@ -174,7 +181,7 @@ wifi:subscribe({ "wifi_change", "system_woke", "forced" }, function(env)
 	wifi:set({
 		icon = {
 			string = settings.icons.text.wifi.disconnected,
-			color = settings.colors.magenta,
+			background = { color = settings.colors.red },
 		},
 	})
 
@@ -186,30 +193,34 @@ wifi:subscribe({ "wifi_change", "system_woke", "forced" }, function(env)
 
 		if ipConnected then
 			wifiIcon = settings.icons.text.wifi.connected
-			wifiColor = settings.colors.white
+			wifiColor = settings.colors.blue
 		end
 
-		wifi:set({
-			icon = {
-				string = wifiIcon,
-				color = wifiColor,
-			},
-		})
+		if wifiIcon then
+			wifi:set({
+				icon = {
+					string = wifiIcon,
+					background = { color = wifiColor },
+				},
+			})
+		end
 
 		sbar.exec([[sleep 2; scutil --nwi | grep -m1 'utun' | awk '{ print $1 }']], function(vpn)
 			local isVPNConnected = not (vpn == "")
 
 			if isVPNConnected then
-				wifiIcon = settings.icons.text.wifi.vpn
+				wifiIcon = settings.icons.text.wifi.vpn or "󰦝"
 				wifiColor = settings.colors.green
 			end
 
-			wifi:set({
-				icon = {
-					string = wifiIcon,
-					color = wifiColor,
-				},
-			})
+			if wifiIcon then
+				wifi:set({
+					icon = {
+						string = wifiIcon,
+						background = { color = wifiColor },
+					},
+				})
+			end
 		end)
 	end)
 end)

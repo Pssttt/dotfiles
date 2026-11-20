@@ -1,5 +1,5 @@
 -- Left items
--- require("items.apple")
+require("items.power")
 require("items.menu_spaces_toggle")
 require("items.menus")
 require("items.spaces")

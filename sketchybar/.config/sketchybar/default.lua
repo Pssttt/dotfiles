@@ -5,7 +5,7 @@ sbar.default({
   icon = {
     font = {
       family = settings.fonts.text,
-      style = settings.fonts.styles.regular,
+      style = settings.fonts.styles.bold,
       size = settings.dimens.text.icon,
     },
     color = settings.colors.white,
@@ -30,12 +30,14 @@ sbar.default({
       corner_radius = settings.dimens.graphics.background.corner_radius
     }
   },
+  -- rofi-style popups: solid base, accent border, soft shadow
   popup = {
     y_offset = settings.dimens.padding.popup,
     align = "center",
     background = {
-      border_width = 0,
-      corner_radius = settings.dimens.graphics.background.corner_radius,
+      border_width = 2,
+      border_color = settings.colors.popup.border,
+      corner_radius = 12,
       color = settings.colors.popup.bg,
       shadow = { drawing = true },
       padding_left = settings.dimens.padding.icon,
@@ -44,22 +46,22 @@ sbar.default({
     blur_radius = settings.dimens.graphics.blur_radius,
   },
   slider = {
-    highlight_color = settings.colors.orange,
+    highlight_color = settings.colors.accent,
     background = {
-      height = settings.dimens.graphics.slider.height,
-      corner_radius = settings.dimens.graphics.background.corner_radius,
+      height = 8,
+      corner_radius = 4,
       color = settings.colors.slider.bg,
-      border_color = settings.colors.slider.border,
-      border_width = 1,
+      border_width = 0,
     },
     knob = {
       font = {
         family = settings.fonts.text,
         style = settings.fonts.styles.regular,
-        size = 32,
+        size = 24,
       },
       string = settings.icons.text.slider.knob,
-      drawing = false,
+      color = settings.colors.accent,
+      drawing = true,
     },
   },
   scroll_texts = true,
