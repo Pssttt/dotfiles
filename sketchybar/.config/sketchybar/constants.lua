@@ -25,7 +25,7 @@ local aerospace <const> = {
   LIST_ALL_WORKSPACES = "aerospace list-workspaces --all",
   GET_CURRENT_WORKSPACE = "aerospace list-workspaces --focused",
   LIST_WINDOWS = "aerospace list-windows --workspace focused --format \"id=%{window-id}, name=%{app-name}\"",
-  GET_CURRENT_WINDOW = "aerospace list-windows --focused --format %{app-name}",
+  GET_CURRENT_WINDOW = "aerospace list-windows --focused --format %{app-name} 2>/dev/null",
 }
 
 return {

@@ -57,8 +57,6 @@ local function updateMenus()
       index = index + 1
     end
   end)
-
-  sbar.set(constants.items.MENU .. ".padding", { drawing = isShowingMenu })
 end
 
 frontAppWatcher:subscribe(constants.events.FRONT_APP_SWITCHED, updateMenus)

@@ -13,9 +13,11 @@ local popup = require("config.popup")
 local palette <const> = settings.colors.palette
 
 local NAME <const> = "media"
--- each check costs ~35ms CPU: poll fast only while something is playing
+-- A check costs ~35ms CPU while playing; when nothing is playing
+-- nowplaying-cli waits ~2.8s for MediaRemote to time out. Poll fast only
+-- while playing.
 local POLL_PLAYING <const> = 1
-local POLL_IDLE <const> = 3
+local POLL_IDLE <const> = 5
 local ART_DIR <const> = "/tmp/sketchybar-media"
 local ART_SIZE <const> = popup.WIDTH - 24 -- points, inset like the text rows
 local ART_SCALE <const> = 0.5 -- artwork is fetched at 2x for retina
@@ -28,8 +30,10 @@ local ICON_NEXT <const> = "\u{f04ad}" -- nf-md-skip_next
 local ICON_PLAY <const> = "\u{f040a}" -- nf-md-play
 local ICON_ALBUM <const> = "\u{f0025}" -- nf-md-album
 
--- raw output minus the (large) artwork blob
-local INFO_CMD <const> = "nowplaying-cli get-raw 2>/dev/null | grep -v ArtworkData"
+-- Raw output minus the (large) artwork blob. The "raw:" prefix stops
+-- sbar.exec from JSON-decoding it: an empty "{ }" result made SbarLua
+-- re-fire unrelated startup callbacks (duplicate workspace items).
+local INFO_CMD <const> = "printf 'raw:'; nowplaying-cli get-raw 2>/dev/null | grep -v ArtworkData"
 
 -- Bar ----------------------------------------------------------------------
 -- gap between this group and the right group (added first = sits rightmost)
@@ -148,7 +152,12 @@ local function rawValue(raw, key)
   if type(raw) ~= "string" then return nil end
   local number = raw:match('"' .. fullKey .. '"%s*:%s*([%d%.%-]+)')
   if number then return tonumber(number) end
-  return raw:match('"' .. fullKey .. '"%s*:%s*"(.-)"%s*[,\n}]')
+  local text = raw:match('"' .. fullKey .. '"%s*:%s*"(.-)"%s*[,\n}]')
+  if text then
+    -- undo JSON escapes for quotes, slashes and backslashes
+    text = text:gsub('\\"', '"'):gsub('\\/', '/'):gsub('\\\\', '\\')
+  end
+  return text
 end
 
 local function rawNumber(raw, key)
@@ -266,8 +275,14 @@ local function restoreAnchor(title, snapshot, rate)
 end
 
 -- Update -------------------------------------------------------------------
+local inFlight = false
+
 refresh = function()
+  -- never stack checks: an idle check can take ~3s
+  if inFlight then return end
+  inFlight = true
   sbar.exec(INFO_CMD, function(raw)
+    inFlight = false
     local title = rawString(raw, "Title")
     if not title then
       hide()

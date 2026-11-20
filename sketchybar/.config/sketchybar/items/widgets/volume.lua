@@ -67,12 +67,18 @@ volumeValue:subscribe("volume_change", function(env)
 end)
 
 -- Output devices (rebuilt each time the card opens) -------------------------
+local hasDevices = false
+
 local function clearDevices()
+  -- skip when empty: removing a regex with no match is logged every time
+  if not hasDevices then return end
+  hasDevices = false
   sbar.remove("/" .. DEVICE_PREFIX:gsub("%.", "\\.") .. ".*/")
 end
 
 local function buildDevices()
   clearDevices()
+  hasDevices = true
 
   sbar.exec("SwitchAudioSource -t output -c", function(currentResult)
     local current = currentResult:gsub("[\r\n]+$", "")

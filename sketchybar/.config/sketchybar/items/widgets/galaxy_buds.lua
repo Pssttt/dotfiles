@@ -5,7 +5,7 @@ local popup = require("config.popup")
 local palette <const> = settings.colors.palette
 
 local CLI_PATH <const> = "'/Applications/Galaxy Buds Manager.app/Contents/MacOS/Galaxy Buds Manager'"
-local QUERY_CMD <const> = CLI_PATH .. [[ device -G -j 2>/dev/null | jq -r 'if .BatteryLeft != null then "\(.BatteryLeft)|\(.BatteryRight)|\(.BatteryCase)|\(.WearStateLeft)|\(.WearStateRight)|\(.Name)" else empty end']]
+local QUERY_CMD <const> = CLI_PATH .. [[ device -G -j 2>/dev/null | jq -r 'if .BatteryLeft != null then "\(.BatteryLeft)|\(.BatteryRight)|\(.BatteryCase)|\(.WearStateLeft)|\(.WearStateRight)|\(.Name)" else empty end' 2>/dev/null]]
 local NOISE_MODE_CMD <const> = [[sqlite3 -batch -list "$HOME/Library/Application Support/GalaxyBudsClient/battery_stats_b04a6ad29ade.db" "SELECT NoiseControlMode FROM Records WHERE NoiseControlMode IS NOT NULL ORDER BY Id DESC LIMIT 1;" 2>/dev/null]]
 
 local currentNoiseMode = -1

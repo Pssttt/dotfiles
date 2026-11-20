@@ -25,8 +25,11 @@ local function selectFocusedWindow(frontAppName)
 end
 
 local function updateWindows(windows)
-	sbar.remove("/" .. constants.items.FRONT_APPS .. "\\..*/")
-	sbar.remove("group.center")
+	-- only remove what exists: failed removes are logged to sketchybar.out.log
+	if next(frontApps) ~= nil then
+		sbar.remove("/" .. constants.items.FRONT_APPS .. "\\..*/")
+		sbar.remove("group.center")
+	end
 
 	frontApps = {}
 	local foundWindows = {}
@@ -34,7 +37,9 @@ local function updateWindows(windows)
 		table.insert(foundWindows, window)
 	end
 
-	for i = #foundWindows, 1, -1 do
+	-- aerospace lists windows in layout order (left to right); center items
+	-- are drawn in the order they're added, so keep that order
+	for i = 1, #foundWindows do
 		local parsedWindow = {}
 		for key, value in string.gmatch(foundWindows[i], "(%w+)=([%w%s]+)") do
 			parsedWindow[key] = value
