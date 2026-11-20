@@ -49,7 +49,7 @@ on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 
 on-focus-changed = [
   'move-mouse window-lazy-center',
-  'exec-and-forget /bin/bash -c /opt/homebrew/bin/sketchybar --trigger front_app_switched',
+  # front_app_switched is sent by macOS itself; only the window list needs a nudge
   'exec-and-forget sketchybar --trigger update_windows',
 ]
 # You can effectively turn off macOS "Hide application" (cmd-h) feature by toggling this flag
