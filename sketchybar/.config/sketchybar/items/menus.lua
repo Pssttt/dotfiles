@@ -31,10 +31,10 @@ local function createPlaceholders()
     menuItems[index] = menu
   end
 
-  local menuIsland = settings.island()
-  menuIsland.background.padding_left = settings.dimens.padding.item
-  menuIsland.background.padding_right = settings.dimens.padding.item
-  sbar.add("bracket", "island.menu", { "/" .. constants.items.MENU .. "\\..*/" }, menuIsland)
+  -- menus are plain text on the bar, no container
+  sbar.add("bracket", "menu.group", { "/" .. constants.items.MENU .. "\\..*/" }, {
+    background = { drawing = false },
+  })
 end
 
 local function updateMenus()

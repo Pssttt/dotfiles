@@ -1,89 +1,104 @@
 local constants = require("constants")
 local settings = require("config.settings")
+local popup = require("config.popup")
 
-local isCharging = false
+local palette <const> = settings.colors.palette
 
-local battery = sbar.add("item", constants.items.BATTERY, settings.chip(settings.colors.green))
+local battery = sbar.add("item", constants.items.BATTERY, settings.widget(palette.green))
 battery:set({
   position = "right",
   update_freq = 60,
+  popup = popup.container("right"),
 })
 
-local batteryPopup = sbar.add("item", {
-  position = "popup." .. battery.name,
-  width = "dynamic",
-  label = {
-    padding_right = settings.dimens.padding.label,
-    padding_left = settings.dimens.padding.label,
-  },
-  icon = {
-    padding_left = 0,
-    padding_right = 0,
-  },
+-- Card ---------------------------------------------------------------------
+local header = popup.header(battery, { name = "battery.card.header", icon = settings.icons.text.battery._100, title = "Battery", color = palette.green })
+local meter = popup.meter(battery, { name = "battery.card.meter", color = palette.green })
+popup.divider(battery)
+local statusRow = popup.row(battery, { name = "battery.card.status", key = "Status" })
+local timeRow = popup.row(battery, { name = "battery.card.time", key = "Time left" })
+local sourceRow = popup.row(battery, { name = "battery.card.source", key = "Power" })
+local cyclesRow = popup.row(battery, { name = "battery.card.cycles", key = "Cycles" })
+local healthRow = popup.row(battery, { name = "battery.card.health", key = "Health" })
+popup.button(battery, {
+  name = "battery.card.settings",
+  icon = settings.icons.text.gear,
+  label = "Battery settings…",
+  color = palette.subtext,
+  on_click = function()
+    battery:set({ popup = { drawing = false } })
+    sbar.exec("open 'x-apple.systempreferences:com.apple.Battery-Settings.extension'")
+  end,
 })
 
-battery:subscribe({ "routine", "power_source_change", "system_woke" }, function()
+-- State --------------------------------------------------------------------
+local function levelStyle(charge, charging)
+  local icons = settings.icons.text.battery
+  if charging then return icons.charging, palette.yellow end
+  if charge > 80 then return icons._100, palette.green end
+  if charge > 60 then return icons._75, palette.green end
+  if charge > 40 then return icons._50, palette.green end
+  if charge > 30 then return icons._50, palette.yellow end
+  if charge > 20 then return icons._25, palette.peach end
+  return icons._0, palette.red
+end
+
+local function parse(batteryInfo)
+  local charge = tonumber(batteryInfo:match("(%d+)%%")) or 0
+  local onAC = batteryInfo:find("AC Power") ~= nil
+  local state = batteryInfo:match("%d+%%; ([^;]+);") or "unknown"
+  local remaining = batteryInfo:match("(%d+:%d+) remaining")
+  return charge, onAC, state, remaining
+end
+
+local function updateBar()
   sbar.exec("pmset -g batt", function(batteryInfo)
-    local icon = "!"
-    local label = "?"
-
-    local found, _, charge = batteryInfo:find("(%d+)%%")
-    if found then
-      charge = tonumber(charge)
-      label = charge .. "%"
-    end
-
-    local color = settings.colors.green
-    local charging, _, _ = batteryInfo:find("AC Power")
-
-    isCharging = charging
-
-    if charging then
-      icon = settings.icons.text.battery.charging
-    else
-      if found and charge > 80 then
-        icon = settings.icons.text.battery._100
-      elseif found and charge > 60 then
-        icon = settings.icons.text.battery._75
-      elseif found and charge > 40 then
-        icon = settings.icons.text.battery._50
-      elseif found and charge > 30 then
-        icon = settings.icons.text.battery._50
-        color = settings.colors.yellow
-      elseif found and charge > 20 then
-        icon = settings.icons.text.battery._25
-        color = settings.colors.orange
-      else
-        icon = settings.icons.text.battery._0
-        color = settings.colors.red
-      end
-    end
-
-    local lead = ""
-    if found and charge < 10 then
-      lead = "0"
-    end
+    local charge, onAC = parse(batteryInfo)
+    local icon, color = levelStyle(charge, onAC)
+    local lead = charge < 10 and "0" or ""
 
     battery:set({
-      icon = {
-        string = icon,
-        background = { color = charging and settings.colors.palette.yellow or color },
-      },
-      label = { string = lead .. label },
+      icon = { string = icon, color = color },
+      label = { string = lead .. charge .. "%" },
     })
   end)
+end
+
+local function updateCard()
+  sbar.exec("pmset -g batt", function(batteryInfo)
+    local charge, onAC, state, remaining = parse(batteryInfo)
+    local icon, color = levelStyle(charge, onAC)
+
+    header:set({ icon = { string = icon, color = color }, label = { string = "Battery  " .. charge .. "%" } })
+    popup.set_meter(meter, charge, color)
+    statusRow:set({ label = { string = state:gsub("^%l", string.upper) } })
+    timeRow:set({ label = { string = remaining and (remaining .. " h") or "—" } })
+    sourceRow:set({ label = { string = onAC and "Adapter" or "Battery", color = onAC and palette.yellow or palette.text } })
+  end)
+
+  -- slower, only fetched while the card is open
+  sbar.exec("system_profiler SPPowerDataType", function(info)
+    local cycles = info:match("Cycle Count: (%d+)") or "—"
+    local condition = info:match("Condition: ([^\n]+)") or "—"
+    local capacity = info:match("Maximum Capacity: (%d+%%)")
+    cyclesRow:set({ label = { string = cycles } })
+    healthRow:set({
+      label = {
+        string = capacity and (condition .. " · " .. capacity) or condition,
+        color = condition == "Normal" and palette.green or palette.peach,
+      },
+    })
+  end)
+end
+
+battery:subscribe({ "routine", "forced", "power_source_change", "system_woke" }, updateBar)
+
+battery:subscribe("mouse.clicked", function()
+  local shouldDraw = battery:query().popup.drawing == "off"
+  battery:set({ popup = { drawing = shouldDraw } })
+  if shouldDraw then updateCard() end
 end)
 
-battery:subscribe("mouse.clicked", function(env)
-  local drawing = battery:query().popup.drawing
-
-  battery:set({ popup = { drawing = "toggle" } })
-
-  if drawing == "off" then
-    sbar.exec("pmset -g batt", function(batteryInfo)
-      local found, _, remaining = batteryInfo:find("(%d+:%d+) remaining")
-      local label = found and ("Time remaining: " .. remaining .. "h") or (isCharging and "Charging" or "No estimate")
-      batteryPopup:set({ label = label })
-    end)
-  end
+battery:subscribe("mouse.exited.global", function()
+  battery:set({ popup = { drawing = false } })
 end)

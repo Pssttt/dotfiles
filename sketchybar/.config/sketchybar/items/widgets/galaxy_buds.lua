@@ -1,10 +1,12 @@
 local constants = require("constants")
 local settings = require("config.settings")
+local popup = require("config.popup")
+
+local palette <const> = settings.colors.palette
 
 local CLI_PATH <const> = "'/Applications/Galaxy Buds Manager.app/Contents/MacOS/Galaxy Buds Manager'"
 local QUERY_CMD <const> = CLI_PATH .. [[ device -G -j 2>/dev/null | jq -r 'if .BatteryLeft != null then "\(.BatteryLeft)|\(.BatteryRight)|\(.BatteryCase)|\(.WearStateLeft)|\(.WearStateRight)|\(.Name)" else empty end']]
 local NOISE_MODE_CMD <const> = [[sqlite3 -batch -list "$HOME/Library/Application Support/GalaxyBudsClient/battery_stats_b04a6ad29ade.db" "SELECT NoiseControlMode FROM Records WHERE NoiseControlMode IS NOT NULL ORDER BY Id DESC LIMIT 1;" 2>/dev/null]]
-local popupWidth <const> = settings.dimens.graphics.popup.width + 20
 
 local currentNoiseMode = -1
 
@@ -15,7 +17,7 @@ local noiseModes = {
   [2] = { icon = "󰂰", name = "Ambient", color = settings.colors.yellow },
 }
 
-local galaxyBuds = sbar.add("item", constants.items.GALAXY_BUDS, settings.chip(settings.colors.palette.teal))
+local galaxyBuds = sbar.add("item", constants.items.GALAXY_BUDS, settings.widget(settings.colors.palette.teal))
 galaxyBuds:set({
   position = "right",
   update_freq = 30,
@@ -24,124 +26,32 @@ galaxyBuds:set({
   label = { string = "" },
 })
 
-local budsTitle = sbar.add("item", {
-  position = "popup." .. galaxyBuds.name,
-  width = popupWidth,
-  align = "center",
-  icon = {
-    string = settings.icons.text.earbuds or "󰥰",
-    font = { style = settings.fonts.styles.bold },
-    color = settings.colors.white,
-  },
-  label = {
-    font = { style = settings.fonts.styles.bold, size = settings.dimens.text.label },
-    max_chars = 22,
-    string = "Galaxy Buds",
-    color = settings.colors.white,
-  },
-})
+galaxyBuds:set({ popup = popup.container("right") })
 
-local budsLeft = sbar.add("item", {
-  position = "popup." .. galaxyBuds.name,
-  width = popupWidth,
-  background = { height = 18 },
-  icon = {
-    align = "left",
-    string = "Left:",
-    width = 50,
-    font = { size = settings.dimens.text.label },
-    color = settings.colors.grey,
-  },
-  label = {
-    align = "right",
-    string = "--%",
-    width = popupWidth - 50,
-    color = settings.colors.white,
-  },
+-- Card ---------------------------------------------------------------------
+local GB <const> = constants.items.GALAXY_BUDS
+local budsTitle = popup.header(galaxyBuds, {
+  name = GB .. ".card.header",
+  icon = settings.icons.text.earbuds,
+  title = "Galaxy Buds",
+  color = palette.teal,
 })
-
-local budsRight = sbar.add("item", {
-  position = "popup." .. galaxyBuds.name,
-  width = popupWidth,
-  background = { height = 18 },
-  icon = {
-    align = "left",
-    string = "Right:",
-    width = 50,
-    font = { size = settings.dimens.text.label },
-    color = settings.colors.grey,
-  },
-  label = {
-    align = "right",
-    string = "--%",
-    width = popupWidth - 50,
-    color = settings.colors.white,
-  },
+popup.divider(galaxyBuds)
+local budsLeft = popup.row(galaxyBuds, { name = GB .. ".card.left", key = "Left" })
+local budsRight = popup.row(galaxyBuds, { name = GB .. ".card.right", key = "Right" })
+local budsCase = popup.row(galaxyBuds, { name = GB .. ".card.case", key = "Case" })
+popup.divider(galaxyBuds)
+local budsNoise = popup.button(galaxyBuds, {
+  name = GB .. ".card.noise",
+  icon = noiseModes[0].icon,
+  color = palette.blue,
+  label = "Noise control",
 })
-
-local budsCase = sbar.add("item", {
-  position = "popup." .. galaxyBuds.name,
-  width = popupWidth,
-  background = { height = 18 },
-  icon = {
-    align = "left",
-    string = "Case:",
-    width = 50,
-    font = { size = settings.dimens.text.label },
-    color = settings.colors.grey,
-  },
-  label = {
-    align = "right",
-    string = "--%",
-    width = popupWidth - 50,
-    color = settings.colors.white,
-  },
-})
-
--- Noise control toggle button
-local budsNoise = sbar.add("item", {
-  position = "popup." .. galaxyBuds.name,
-  width = popupWidth,
-  background = {
-    height = 24,
-    corner_radius = 6,
-    drawing = true,
-    color = settings.colors.bg2,
-  },
-  icon = {
-    string = "󰋑",
-    color = settings.colors.grey,
-    align = "left",
-    width = 24,
-  },
-  label = {
-    string = "Noise Control: Off",
-    align = "left",
-    color = settings.colors.white,
-  },
-})
-
--- Galaxy Buds Manager button
-local budsManager = sbar.add("item", {
-  position = "popup." .. galaxyBuds.name,
-  width = popupWidth,
-  background = {
-    height = 24,
-    corner_radius = 6,
-    drawing = false,
-    color = settings.colors.bg2,
-  },
-  icon = {
-    string = settings.icons.text.gear or "",
-    color = settings.colors.green,
-    align = "left",
-    width = 24,
-  },
-  label = {
-    string = "Galaxy Buds Manager",
-    align = "left",
-    color = settings.colors.white,
-  },
+local budsManager = popup.button(galaxyBuds, {
+  name = GB .. ".card.manager",
+  icon = settings.icons.text.gear,
+  color = palette.subtext,
+  label = "Open Buds Manager",
 })
 
 local function updateNoiseDisplay(mode)
@@ -151,8 +61,7 @@ local function updateNoiseDisplay(mode)
 
   budsNoise:set({
     icon = { string = m.icon, color = m.color },
-    label = { string = "Noise Control: " .. m.name, color = settings.colors.white },
-    background = { drawing = true, color = settings.colors.bg2 },
+    label = { string = "Noise control  " .. m.name },
   })
 end
 
@@ -184,14 +93,19 @@ local function updateGalaxyBuds()
 
       galaxyBuds:set({
         drawing = true,
-        icon = { string = settings.icons.text.earbuds or "󰥰", background = { color = color } },
+        icon = { string = settings.icons.text.earbuds or "󰥰", color = color },
         label = { string = lead .. batt .. "%", drawing = true },
       })
 
       budsTitle:set({ label = { string = name or "Galaxy Buds" } })
-      budsLeft:set({ label = { string = nLeft .. "% (" .. wearL .. ")" } })
-      budsRight:set({ label = { string = nRight .. "% (" .. wearR .. ")" } })
-      budsCase:set({ label = { string = (nCase > 0) and (nCase .. "%") or "In use / Closed" } })
+      local function levelColor(value)
+        if value <= 15 then return palette.red end
+        if value <= 30 then return palette.yellow end
+        return palette.text
+      end
+      budsLeft:set({ label = { string = nLeft .. "%  " .. wearL, color = levelColor(nLeft) } })
+      budsRight:set({ label = { string = nRight .. "%  " .. wearR, color = levelColor(nRight) } })
+      budsCase:set({ label = { string = (nCase > 0) and (nCase .. "%") or "Closed", color = nCase > 0 and levelColor(nCase) or palette.overlay } })
 
       sbar.exec(NOISE_MODE_CMD, function(noiseResult)
         local mode = tonumber(noiseResult:match("%d+"))
@@ -253,35 +167,11 @@ budsNoise:subscribe("mouse.clicked", function()
   end)
 end)
 
--- Hover feedback for noise control
-budsNoise:subscribe("mouse.entered", function()
-  budsNoise:set({
-    background = { color = settings.colors.dark_grey or settings.colors.bg1 },
-    label = { color = settings.colors.cyan },
-  })
-end)
-budsNoise:subscribe("mouse.exited", function()
-  budsNoise:set({
-    background = { color = settings.colors.bg2 },
-    label = { color = settings.colors.white },
-  })
-end)
-
--- Hover feedback for manager button
-budsManager:subscribe("mouse.entered", function()
-  budsManager:set({
-    background = { drawing = true },
-    label = { color = settings.colors.green },
-  })
-end)
-budsManager:subscribe("mouse.exited", function()
-  budsManager:set({
-    background = { drawing = false },
-    label = { color = settings.colors.white },
-  })
-end)
-
 -- Manager button click
+galaxyBuds:subscribe("mouse.exited.global", function()
+  galaxyBuds:set({ popup = { drawing = false } })
+end)
+
 budsManager:subscribe("mouse.clicked", function()
   galaxyBuds:set({ popup = { drawing = false } })
   sbar.exec(CLI_PATH .. ' action -e ToggleManagerVisibility')

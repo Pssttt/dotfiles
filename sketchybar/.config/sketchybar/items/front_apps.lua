@@ -2,9 +2,9 @@ local constants = require("constants")
 local settings = require("config.settings")
 
 local palette <const> = settings.colors.palette
-local ISLAND <const> = "island.front_apps"
 
--- Dock-style island: app icons only, the focused app also shows its name.
+-- Windows on the current workspace: the focused app shows icon + name,
+-- the rest show a dim icon only.
 local frontApps = {}
 
 local frontAppWatcher = sbar.add("item", {
@@ -13,15 +13,12 @@ local frontAppWatcher = sbar.add("item", {
 })
 
 local function selectFocusedWindow(frontAppName)
-	sbar.animate("tanh", 15, function()
+	sbar.animate("tanh", 12, function()
 		for appName, app in pairs(frontApps) do
 			local isSelected = appName == frontAppName
 			app:set({
 				icon = { color = isSelected and palette.mauve or palette.overlay },
-				label = {
-					color = palette.text,
-					width = isSelected and "dynamic" or 0,
-				},
+				label = { width = isSelected and "dynamic" or 0 },
 			})
 		end
 	end)
@@ -29,7 +26,6 @@ end
 
 local function updateWindows(windows)
 	sbar.remove("/" .. constants.items.FRONT_APPS .. "\\..*/")
-	sbar.remove(ISLAND)
 
 	frontApps = {}
 	local foundWindows = {}
@@ -54,18 +50,20 @@ local function updateWindows(windows)
 				padding_right = 0,
 				icon = {
 					string = icon,
-					font = settings.fonts.icons(15),
+					font = settings.fonts.icons(14),
 					color = palette.overlay,
-					padding_left = 8,
-					padding_right = 8,
+					padding_left = 6,
+					padding_right = 6,
 				},
 				label = {
 					string = windowName,
 					width = 0,
+					color = palette.text,
 					padding_left = 0,
-					padding_right = 10,
+					padding_right = 8,
 					font = { style = settings.fonts.styles.bold },
 				},
+				background = { drawing = false },
 				click_script = "aerospace focus --window-id " .. windowId,
 			})
 
@@ -73,13 +71,6 @@ local function updateWindows(windows)
 				selectFocusedWindow(env.INFO)
 			end)
 		end
-	end
-
-	if next(frontApps) ~= nil then
-		local container = settings.island()
-		container.background.padding_left = 3
-		container.background.padding_right = 3
-		sbar.add("bracket", ISLAND, { "/" .. constants.items.FRONT_APPS .. "\\..*/" }, container)
 	end
 
 	sbar.exec(constants.aerospace.GET_CURRENT_WINDOW, function(frontAppName)

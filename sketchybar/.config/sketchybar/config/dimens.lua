@@ -2,30 +2,28 @@ local padding <const> = {
 	background = 8,
 	icon = 10,
 	label = 8,
-	bar = 10,
-	left = 0,
-	right = 0,
+	bar = 0,
+	left = 10,
+	right = 12,
 	item = 6,
-	chip_gap = 3,
-	popup = 8,
+	widget = 9,
+	chip_gap = 9,
+	popup = 6,
 }
 
 local graphics <const> = {
 	bar = {
-		height = 38,
-		offset = 5,
+		height = 32,
+		offset = 0,
 	},
 	background = {
-		height = 28,
-		corner_radius = 9,
+		height = 24,
+		corner_radius = 8,
 	},
-	chip = {
-		height = 28,
-		corner_radius = 9,
-	},
-	island = {
-		height = 28,
-		corner_radius = 9,
+	underline = {
+		height = 3,
+		-- sits on the bottom edge of the bar
+		y_offset = -14,
 	},
 	slider = {
 		height = 20,
@@ -34,11 +32,11 @@ local graphics <const> = {
 		width = 200,
 		large_width = 300,
 	},
-	blur_radius = 20,
+	blur_radius = 0,
 }
 
 local text <const> = {
-	icon = 15.0,
+	icon = 14.0,
 	label = 13.0,
 }
 

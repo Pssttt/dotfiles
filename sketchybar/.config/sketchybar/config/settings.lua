@@ -3,57 +3,42 @@ local fonts <const> = require("config.fonts")
 local icons <const> = require("config.icons")
 local dimens <const> = require("config.dimens")
 
-local chipDimens <const> = dimens.graphics.chip
+local palette <const> = colors.palette
 
--- Dark rounded container (used as bracket properties)
-local function island()
+-- Plain status widget: coloured icon, muted label, no background.
+local function widget(color)
   return {
-    background = {
-      drawing = true,
-      color = colors.island.bg,
-      border_color = colors.island.border,
-      border_width = 1,
-      height = dimens.graphics.island.height,
-      corner_radius = dimens.graphics.island.corner_radius,
-      shadow = { drawing = true, color = colors.chip.shadow, distance = 3, angle = 90 },
+    padding_left = dimens.padding.widget,
+    padding_right = dimens.padding.widget,
+    background = { drawing = false },
+    icon = {
+      color = color,
+      padding_left = 0,
+      padding_right = 6,
+    },
+    label = {
+      color = palette.subtext,
+      padding_left = 0,
+      padding_right = 0,
     },
   }
 end
 
--- Split "block": solid accent segment for the icon, dark segment for the label.
--- Pass the result straight to sbar.add / item:set.
-local function chip(accent, opts)
-  opts = opts or {}
-  return {
-    padding_left = dimens.padding.chip_gap,
-    padding_right = dimens.padding.chip_gap,
-    background = {
-      drawing = true,
-      color = colors.chip.bg,
-      border_color = colors.chip.border,
-      border_width = 1,
-      height = chipDimens.height,
-      corner_radius = chipDimens.corner_radius,
-      shadow = { drawing = true, color = colors.chip.shadow, distance = 3, angle = 90 },
-    },
-    icon = {
-      color = colors.palette.crust,
-      padding_left = 10,
-      padding_right = 10,
-      background = {
-        drawing = true,
-        color = accent,
-        height = chipDimens.height,
-        corner_radius = chipDimens.corner_radius,
-      },
-    },
+-- Thin vertical divider between groups
+local function separator(name, position)
+  return sbar.add("item", name, {
+    position = position or "left",
+    padding_left = 6,
+    padding_right = 6,
+    icon = { drawing = false },
     label = {
-      color = colors.palette.text,
-      padding_left = 8,
-      padding_right = opts.label_padding_right or 11,
-      font = { family = fonts.text, style = fonts.styles.bold, size = dimens.text.label },
+      string = "│",
+      color = palette.surface1,
+      padding_left = 0,
+      padding_right = 0,
     },
-  }
+    background = { drawing = false },
+  })
 end
 
 return {
@@ -61,6 +46,6 @@ return {
   dimens = dimens,
   colors = colors,
   icons = icons,
-  island = island,
-  chip = chip,
+  widget = widget,
+  separator = separator,
 }

@@ -30,18 +30,16 @@ sbar.default({
       corner_radius = settings.dimens.graphics.background.corner_radius
     }
   },
-  -- rofi-style popups: solid base, accent border, soft shadow
+  -- default card style; owners usually override via config/popup.lua
   popup = {
-    y_offset = settings.dimens.padding.popup,
+    y_offset = 6,
     align = "center",
     background = {
-      border_width = 2,
+      border_width = 1,
       border_color = settings.colors.popup.border,
-      corner_radius = 12,
+      corner_radius = 14,
       color = settings.colors.popup.bg,
       shadow = { drawing = true },
-      padding_left = settings.dimens.padding.icon,
-      padding_right = settings.dimens.padding.icon,
     },
     blur_radius = settings.dimens.graphics.blur_radius,
   },

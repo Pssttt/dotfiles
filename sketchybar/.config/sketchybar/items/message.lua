@@ -19,13 +19,18 @@ local messagePopup = sbar.add("item", {
   position = "popup." .. message.name,
   width = "dynamic",
   label = {
-    padding_right = settings.dimens.padding.label,
-    padding_left = settings.dimens.padding.label,
+    color = settings.colors.palette.text,
+    font = { style = settings.fonts.styles.bold },
+    padding_left = 0,
+    padding_right = 14,
   },
   icon = {
-    padding_left = 0,
-    padding_right = 0,
+    string = "\u{f009a}", -- nf-md-bell
+    color = settings.colors.palette.mauve,
+    padding_left = 14,
+    padding_right = 10,
   },
+  background = { drawing = true, color = settings.colors.transparent, height = 36 },
 })
 
 local function hideMessage()

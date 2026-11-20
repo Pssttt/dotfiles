@@ -1,86 +1,83 @@
--- rofi-style power menu, opened from the Apple logo block
+-- Power menu card, opened from the Apple logo
 local settings = require("config.settings")
+local popup = require("config.popup")
 
-local colors <const> = settings.colors
-local palette <const> = colors.palette
+local palette <const> = settings.colors.palette
 
 local power = sbar.add("item", "power", {
-  padding_left = settings.dimens.padding.chip_gap,
-  padding_right = settings.dimens.padding.chip_gap,
+  padding_left = 0,
+  padding_right = 4,
   icon = {
     string = settings.icons.text.apple,
-    color = palette.crust,
+    color = palette.mauve,
     font = { size = 16.0 },
-    padding_left = 11,
-    padding_right = 12,
+    padding_left = 6,
+    padding_right = 6,
   },
   label = { drawing = false },
-  background = {
-    drawing = true,
-    color = palette.mauve,
-    height = settings.dimens.graphics.chip.height,
-    corner_radius = settings.dimens.graphics.chip.corner_radius,
-    shadow = { drawing = true, color = colors.chip.shadow, distance = 3, angle = 90 },
-  },
-  popup = { align = "left", y_offset = 6 },
+  background = { drawing = false },
+  popup = popup.container("left"),
 })
-
-sbar.add("item", "power.header", {
-  position = "popup." .. power.name,
-  icon = { string = "󰣇", color = palette.mauve, padding_left = 8 },
-  label = {
-    string = os.getenv("USER") or "session",
-    color = palette.subtext,
-    font = { style = settings.fonts.styles.bold },
-  },
-})
-
--- Restart, shut down and log out go through loginwindow, so macOS still
--- shows its own confirmation dialog.
-local actions <const> = {
-  { icon = "󰌾", name = "Lock", color = palette.blue, cmd = "pmset displaysleepnow" },
-  { icon = "󰒲", name = "Sleep", color = palette.teal, cmd = "pmset sleepnow" },
-  { icon = "󰍃", name = "Log out", color = palette.yellow, cmd = [[osascript -e 'tell app "loginwindow" to «event aevtlogo»']] },
-  { icon = "󰜉", name = "Restart", color = palette.peach, cmd = [[osascript -e 'tell app "loginwindow" to «event aevtrrst»']] },
-  { icon = "󰐥", name = "Shut down", color = palette.red, cmd = [[osascript -e 'tell app "loginwindow" to «event aevtrsdn»']] },
-}
 
 local function closeMenu()
   power:set({ popup = { drawing = false } })
 end
 
-for index, action in ipairs(actions) do
-  local row = sbar.add("item", "power.action." .. index, {
-    position = "popup." .. power.name,
-    width = 170,
-    icon = {
-      string = action.icon,
-      color = action.color,
-      width = 30,
-      padding_left = 8,
-    },
-    label = { string = action.name, color = palette.text },
-    background = {
-      drawing = true,
-      color = colors.transparent,
-      height = 30,
-      corner_radius = 8,
-    },
-  })
+local header = popup.header(power, {
+  name = "power.card.header",
+  icon = "\u{f0004}", -- nf-md-account
+  title = os.getenv("USER") or "session",
+  color = palette.mauve,
+})
+local uptimeRow = popup.row(power, { name = "power.card.uptime", key = "Uptime" })
+local hostRow = popup.row(power, { name = "power.card.host", key = "Host" })
+popup.divider(power)
 
-  row:subscribe("mouse.entered", function()
-    row:set({ background = { color = colors.popup.hover } })
+-- Restart, shut down and log out go through loginwindow, so macOS still
+-- shows its own confirmation dialog.
+local actions <const> = {
+  { icon = "\u{f033e}", label = "Lock screen", color = palette.blue,
+    cmd = [[osascript -e 'tell application "System Events" to keystroke "q" using {control down, command down}']] },
+  { icon = "\u{f04b2}", label = "Sleep", color = palette.teal, cmd = "pmset sleepnow" },
+  { icon = "\u{f0343}", label = "Log out", color = palette.yellow,
+    cmd = [[osascript -e 'tell app "loginwindow" to «event aevtlogo»']] },
+  { icon = "\u{f0709}", label = "Restart", color = palette.peach,
+    cmd = [[osascript -e 'tell app "loginwindow" to «event aevtrrst»']] },
+  { icon = "\u{f0425}", label = "Shut down", color = palette.red,
+    cmd = [[osascript -e 'tell app "loginwindow" to «event aevtrsdn»']] },
+}
+
+for index, action in ipairs(actions) do
+  popup.button(power, {
+    name = "power.action." .. index,
+    icon = action.icon,
+    color = action.color,
+    label = action.label,
+    on_click = function()
+      closeMenu()
+      sbar.exec(action.cmd)
+    end,
+  })
+end
+
+local function updateCard()
+  sbar.exec([[uptime | sed -E 's/.*up +//; s/, +[0-9]+ users?.*//; s/,//g']], function(result)
+    uptimeRow:set({ label = { string = (result:gsub("[\r\n]", "")) } })
   end)
-  row:subscribe("mouse.exited", function()
-    row:set({ background = { color = colors.transparent } })
-  end)
-  row:subscribe("mouse.clicked", function()
-    closeMenu()
-    sbar.exec(action.cmd)
+  sbar.exec("scutil --get ComputerName", function(result)
+    hostRow:set({ label = { string = (result:gsub("[\r\n]", "")) } })
   end)
 end
 
 power:subscribe("mouse.clicked", function()
-  power:set({ popup = { drawing = "toggle" } })
+  local shouldDraw = power:query().popup.drawing == "off"
+  power:set({ popup = { drawing = shouldDraw } })
+  if shouldDraw then updateCard() end
+end)
+power:subscribe("mouse.entered", function()
+  power:set({ icon = { color = palette.pink } })
+end)
+power:subscribe("mouse.exited", function()
+  power:set({ icon = { color = palette.mauve } })
 end)
 power:subscribe("mouse.exited.global", closeMenu)

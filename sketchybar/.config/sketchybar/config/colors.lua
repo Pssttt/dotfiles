@@ -48,22 +48,13 @@ local colors <const> = {
   accent = palette.mauve,
 
   bar = {
-    bg = 0xe61e1e2e,
-    border = palette.surface1,
+    bg = 0xf2181825, -- mantle
+    border = palette.surface0,
     transparent = 0x00000000,
   },
-  chip = {
-    bg = 0xeb1e1e2e,
-    border = palette.surface1,
-    shadow = 0x80000000,
-  },
-  island = {
-    bg = 0xeb1e1e2e,
-    border = palette.surface1,
-  },
   popup = {
-    bg = 0xf51e1e2e,
-    border = palette.mauve,
+    bg = 0xff1e1e2e,
+    border = palette.surface1,
     hover = palette.surface1,
   },
   slider = {
