@@ -181,12 +181,14 @@ local CHROME_WIDTH <const> = 12 + 15 + 6 + 12 + 12 -- paddings, icon, group gaps
 local MIN_CHARS <const> = 8
 local MAX_CHARS <const> = 40
 
-local function firstRect(query)
-  if type(query) ~= "table" or type(query.bounding_rects) ~= "table" then return nil end
-  for _, rect in pairs(query.bounding_rects) do
-    if rect.origin and rect.origin[1] > -9000 then return rect end
+-- bounding rects per display ("display-1" = { origin, size }), hidden ones dropped
+local function rects(query)
+  local out = {}
+  if type(query) ~= "table" or type(query.bounding_rects) ~= "table" then return out end
+  for display, rect in pairs(query.bounding_rects) do
+    if rect.origin and rect.origin[1] > -9000 then out[display] = rect end
   end
-  return nil
+  return out
 end
 
 local function fitLabel()
@@ -197,12 +199,23 @@ local function fitLabel()
   end
   if not present["group.right"] then return end
 
-  local right = firstRect(sbar.query("group.right"))
-  local neighbour = present["group.center"] and firstRect(sbar.query("group.center"))
-    or (present["group.left"] and firstRect(sbar.query("group.left")))
-  if not right or not neighbour then return end
+  local right = rects(sbar.query("group.right"))
+  local neighbour = present["group.center"] and rects(sbar.query("group.center"))
+    or (present["group.left"] and rects(sbar.query("group.left")))
+    or {}
 
-  local available = right.origin[1] - (neighbour.origin[1] + neighbour.size[1]) - CHROME_WIDTH
+  -- compare rects on the same display (coordinates are global, so mixing
+  -- displays gives nonsense) and fit the tightest one
+  local available
+  for display, r in pairs(right) do
+    local n = neighbour[display]
+    if n then
+      local space = r.origin[1] - (n.origin[1] + n.size[1]) - CHROME_WIDTH
+      if not available or space < available then available = space end
+    end
+  end
+  if not available then return end
+
   local chars = math.floor(available / CHAR_WIDTH)
   chars = math.max(MIN_CHARS, math.min(MAX_CHARS, chars))
   media:set({ label = { max_chars = chars } })
@@ -412,6 +425,14 @@ progress:subscribe("mouse.clicked", function(env)
 end)
 
 media:subscribe({ "routine", "forced", "system_woke", "media_change" }, refresh)
+
+-- The center group is rebuilt whenever windows open, close or move. Refit
+-- after it has been laid out, otherwise the label keeps its old width and
+-- overlaps the new group.
+local function refitSoon()
+  sbar.delay(0.6, fitLabel)
+end
+media:subscribe({ "front_app_switched", "update_windows", "aerospace_workspace_changed" }, refitSoon)
 
 media:subscribe("mouse.clicked", function(env)
   if env.BUTTON == "right" then
